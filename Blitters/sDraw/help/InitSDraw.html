@@ -1,0 +1,51 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>InitSDraw</h1>
+<p><span style="font-weight: bold;">InitSDraw</span> initializes the sDraw library. Doesn't require the presence of any already-created window in your app.</p>
+<BR>
+<p>InitSDraw(long wid,long hei);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>wid,hei</b></dt>
+  <dd>width and height of the back-buffer for sDraw. To save RAM, use the tightest possible size. Usually, wid=0 and hei=0 - sDraw will replace them with the screen-size.</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>InitSDraw(0,0);
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+Should be called only once. Before app-exit, you should call <a href="FreeSDraw.html">FreeSDraw();</a><BR>
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="FreeSDraw.html">FreeSDraw</a>,
+<a href="ResizeSDrawArea.html">ResizeSDrawArea</a>,
+<a href="sdStart.html">sdStart</a>,
+<a href="sdSpriteFromBitmapFile.html">sdSpriteFromBitmapFile</a>
+</p>
+</body>
+</html>

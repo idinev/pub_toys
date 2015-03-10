@@ -1,0 +1,50 @@
+[OPTIONS]
+Binary Index=No
+Compatibility=1.1
+Compiled file=sDraw.chm
+Contents file=Table of Contents.hhc
+Default topic=intro.html
+Display compile progress=Yes
+Full-text search=Yes
+Language=0x409 English (United States)
+Title=sDraw GUI drawing library
+
+
+[FILES]
+FreeSDraw.html
+InitSDraw.html
+intro.html
+ResizeSDrawArea.html
+sBlt.html
+sBltAdd.html
+sBltAddFade.html
+sBltAlpha.html
+sBltParam.html
+sBltTile.html
+sBltTint.html
+sBltTrans.html
+sBltTransAlpha.html
+sdCreateBlankSprite.html
+sdDeleteSprite.html
+sdEnd.html
+sdEnterClip.html
+sdForceClip.html
+sdForceUpdate.html
+sdGetPixel.html
+sdLeaveClip.html
+sdLockRect.html
+sdPreprocessSprite.html
+sDrawRect.html
+sDrawRectAddFade.html
+sDrawRectAlpha.html
+sDrawRectROP.html
+sdSetPixel.html
+sdSetPixelA.html
+sdSetSourceSprite.html
+sdSetTargetSprite.html
+sdSpriteFromBitmapFile.html
+sdSpriteFromHBITMAP.html
+sdSpriteFromILB.html
+sdSpriteFromILBFile.html
+sdStart.html
+ILBfiles.html

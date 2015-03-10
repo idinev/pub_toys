@@ -1,0 +1,61 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdStart</h1>
+<p><span style="font-weight: bold;">sdStart</span> starts drawing on the current window's client area. </p>
+<BR>
+<p>bool sdStart(HWND hWnd);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>hWnd</b></dt>
+  <dd>Handle of the window to start drawing on</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p><B>true</b> - success</b><BR>
+<B>false</b> - failed to start drawing, since the window is not visible. <B>Must not continue</b> drawing on it now. <BR>
+[ASM: zero flag is set if failed]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>
+<pre>
+void DrawWindow(HWND hWnd){
+	if(!sdStart(hWnd))return; // must return on failure
+	sDrawRect(0,0,2000,2000,0xFF0000); //fill with red
+	sdEnd();
+}
+</pre>
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+Must end with <B>sdEnd</b>() if sdStart() is successful. <BR>
+sDraw obtains the initial clipper via GDI's GetClipBox(), resets the draw-offset, clip-stack and source/target sSprites. 
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sdEnd.html">sdEnd</a>,
+<a href="sBlt.html">sBlt</a>,
+<a href="sdEnterClip.html">sdEnterClip</a>,
+<a href="sdSetSourceSprite.html">sdSetSourceSprite</a>
+</p>
+</body>
+</html>

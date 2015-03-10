@@ -1,0 +1,47 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sDrawRectAddFade</h1>
+<p><span style="font-weight: bold;">sDrawRectAddFade</span> additive-blends a rectangle with the specified dwColor and the intensity of this dwColor (Alpha).</p>
+<BR>
+<p>void sDrawRectAddFade(long x,long y,long wid,long hei,long dwColor,long Alpha);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>x,y,wid,hei</b></dt>
+  <dd>rectangle position and size</dd>
+  <dt> <b>dwColor</b></dt>
+  <dd>color to use for drawing</dd>
+  <dt> <b>Alpha</b></dt>
+  <dd>0..256 - intensity of the dwColor's light</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+If you need a constant intensity of 256 (Alpha=256), you can also use sDrawRectROP(...,SD_ADDSAT);
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sDrawRectAlpha.html">sDrawRectAlpha</a>,
+<a href="sDrawRectROP.html">sDrawRectROP</a>,
+<a href="sDrawRect.html">sDrawRect</a>
+</p>
+</body>
+</html>

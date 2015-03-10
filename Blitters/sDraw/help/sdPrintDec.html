@@ -1,0 +1,52 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdPrintDec</h1>
+<p><span style="font-weight: bold;">sdPrintDec</span> draws the specified signed number with dwColor and the currently selected font (via the SD_CurFont variable)</p>
+<BR>
+<p>sdPrintDec(long x,long y,long nValue,long dwColor)</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>x,y</b></dt>
+  <dd>top-left corner to start drawing from</dd>
+  <dt> <b>nValue</b></dt>
+  <dd>signed integer</dd>
+  <dt> <b>dwColor</b></dt>
+  <dd>color to draw with</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>sdPrintDec(0,0, 177,0xFFFFFF); 
+</p>
+
+<h4>Remarks</h4>
+<p>
+Internally calls sTextOut() 
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sdLoadFont.html">sdLoadFont</a>,
+<a href="sTextOut.html">sTextOut</a>
+</p>
+</body>
+</html>

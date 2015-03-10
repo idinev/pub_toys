@@ -1,0 +1,52 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sDrawRectFrame3D</h1>
+<p><span style="font-weight: bold;">sDrawRectFrame3D</span> draws a solid rectangle with the specified dwColor, draws the top and left borders with dwLightColor, and draws the bottom and right borders with dwDarkColor.</p>
+<BR>
+<p>void sDrawRectFrame3D(long x,long y,long wid,long hei,long dwColor,long dwLightColor,long dwDarkColor);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>x,y,wid,hei</b></dt>
+  <dd>rectangle position and size</dd>
+  <dt> <b>dwColor</b></dt>
+  <dd>color to use for filling</dd>
+  <dt> <b>dwLightColor</b></dt>
+  <dd>color to use for drawing the top and left borders. Usually brighter than dwColor</dd>
+  <dt> <b>dwDarkColor</b></dt>
+  <dd>color to use for drawing the bottom and right borders. Usually darker than dwColor</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>
+sDrawRectFrame3D(0,0,80,128,RGB(128,160,180),RGB(152,192,218),RGB(96,122,138));
+</p>
+
+
+
+
+<h4>See Also</h4>
+<p>
+<a href="sDrawRect.html">sDrawRect</a>,
+<a href="sDrawRectFrame.html">sDrawRectFrame</a>
+</p>
+</body>
+</html>

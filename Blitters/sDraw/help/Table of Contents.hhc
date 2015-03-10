@@ -1,0 +1,237 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<!-- Sitemap 1.0 -->
+</HEAD><BODY>
+<OBJECT type="text/site properties">
+	<param name="ImageType" value="Folder">
+</OBJECT>
+<UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Introduction">
+		<param name="Local" value="intro.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Initialization/system">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="InitSDraw">
+			<param name="Local" value="InitSDraw.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="FreeSDraw">
+			<param name="Local" value="FreeSDraw.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="ResizeSDrawArea">
+			<param name="Local" value="ResizeSDrawArea.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Exported Objects">
+			<param name="Local" value="ExportedObjects.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="sSprite management">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdSpriteFromBitmapFile">
+			<param name="Local" value="sdSpriteFromBitmapFile.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdSpriteFromHBITMAP">
+			<param name="Local" value="sdSpriteFromHBITMAP.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdSpriteFromILB">
+			<param name="Local" value="sdSpriteFromILB.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdSpriteFromILBFile">
+			<param name="Local" value="sdSpriteFromILBFile.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdCreateBlankSprite">
+			<param name="Local" value="sdCreateBlankSprite.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdSpriteFromJPG">
+			<param name="Local" value="sdSpriteFromJPG.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdSpriteFromJPGFile">
+			<param name="Local" value="sdSpriteFromJPGFile.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdPreprocessSprite">
+			<param name="Local" value="sdPreprocessSprite.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="ILB files/data">
+			<param name="Local" value="ILBfiles.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdDeleteSprite">
+			<param name="Local" value="sdDeleteSprite.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Drawing and clipping controllers">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdStart">
+			<param name="Local" value="sdStart.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdEnd">
+			<param name="Local" value="sdEnd.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdStartEx">
+			<param name="Local" value="sdStartEx.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdEndEx">
+			<param name="Local" value="sdEndEx.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdForceUpdate">
+			<param name="Local" value="sdForceUpdate.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdFetchBackground">
+			<param name="Local" value="sdFetchBackground.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdEnterClip">
+			<param name="Local" value="sdEnterClip.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdLeaveClip">
+			<param name="Local" value="sdLeaveClip.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdForceClip">
+			<param name="Local" value="sdForceClip.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdSetSourceSprite">
+			<param name="Local" value="sdSetSourceSprite.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdSetTargetSprite">
+			<param name="Local" value="sdSetTargetSprite.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdLockRect">
+			<param name="Local" value="sdLockRect.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdStartDrawingOnSprite">
+			<param name="Local" value="sdStartDrawingOnSprite.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Drawing and blending functions">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sBlt">
+			<param name="Local" value="sBlt.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sBltParam">
+			<param name="Local" value="sBltParam.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sBltAlpha">
+			<param name="Local" value="sBltAlpha.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sBltTrans">
+			<param name="Local" value="sBltTrans.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sBltTransAlpha">
+			<param name="Local" value="sBltTransAlpha.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sBltAdd">
+			<param name="Local" value="sBltAdd.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sBltAddFade">
+			<param name="Local" value="sBltAddFade.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sBltTint">
+			<param name="Local" value="sBltTint.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sBltTile">
+			<param name="Local" value="sBltTile.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdGetPixel">
+			<param name="Local" value="sdGetPixel.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdSetPixel">
+			<param name="Local" value="sdSetPixel.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdSetPixelA">
+			<param name="Local" value="sdSetPixelA.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sDrawRect">
+			<param name="Local" value="sDrawRect.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sDrawRectAlpha">
+			<param name="Local" value="sDrawRectAlpha.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sDrawRectAddFade">
+			<param name="Local" value="sDrawRectAddFade.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sDrawRectROP">
+			<param name="Local" value="sDrawRectROP.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sDrawRectFrame">
+			<param name="Local" value="sDrawRectFrame.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sDrawRectFrame3D">
+			<param name="Local" value="sDrawRectFrame3D.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sDrawLine">
+			<param name="Local" value="sDrawLine.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Text drawing">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdLoadFont">
+			<param name="Local" value="sdLoadFont.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sTextOut">
+			<param name="Local" value="sTextOut.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="sdPrintDec">
+			<param name="Local" value="sdPrintDec.html">
+			</OBJECT>
+	</UL>
+</UL>
+</BODY></HTML>

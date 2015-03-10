@@ -1,0 +1,65 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sDrawRectROP</h1>
+<p><span style="font-weight: bold;">sDrawRectROP</span> performs a ROP (Raster Operation) on a rectangle with the specified dwColor.</p>
+<BR>
+<p>void sDrawRectROP(long x,long y,long wid,long hei,long dwColor,long dwROP);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>x,y,wid,hei</b></dt>
+  <dd>rectangle position and size</dd>
+  <dt> <b>dwColor</b></dt>
+  <dd>color to use for drawing</dd>
+  <dt> <b>dwROP</b></dt>
+  <dd>raster operation to use</dd>
+</dl>
+
+
+<h4>Available ROPs</h4>
+<dl>
+	Assume <B>dwOutColor</b> is the destination pixel
+	<dt><b>SD_COPY</b></dt>		<dd>dwOutColor = dwColor</dd>
+	<dt><b>SD_XOR</b></dt>		<dd>dwOutColor ^= dwColor</dd>
+	<dt><b>SD_ADD</b></dt>		<dd>dwOutColor += dwColor</dd>
+	<dt><b>SD_SUB</b></dt>		<dd>dwOutColor -= dwColor</dd>
+	<dt><b>SD_OR</b></dt>		<dd>dwOutColor |= dwColor</dd>
+	<dt><b>SD_AND</b></dt>		<dd>dwOutColor &= dwColor</dd>
+	<dt><b>SD_SHR</b></dt>		<dd>dwOutColor >>= dwColor; (here dwColor=0..32)</dd>
+	<dt><b>SD_MUL</b></dt>		<dd>dwOutColor.Red = (dwOutColor.Red * dwColor.Red)>>8; (same for Blue and Green)</dd>
+	<dt><b>SD_ADDSAT</b></dt>	<dd>dwOutColor = Add_Saturate(dwOutColor,dwColor);</dd>
+	<dt><b>SD_SUBSAT</b></dt>	<dd>dwOutColor = Sub_Saturate(dwOutColor,dwColor);</dd>
+	<dt><b>SD_SHRSAT</b></dt>	<dd>dwOutColor.Red = dwOutColor.Red/2; (same for Blue and Green)  (dwColor is not used). Makes the destination rectangle <B>darker</b></dd>
+	<dt><b>SD_SHLSAT</b></dt>	<dd>dwOutColor = Add_Saturate(dwOutColor,dwOutColor);   (dwColor is not used). Makes the destination rectangle <B>brighter</b></dd>
+</dl>
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>
+sDrawRect(0,0,400,300,0xFFFFFF,SD_XOR);// invert the 400x300 rectangle at position 0:0
+</p>
+
+
+
+
+<h4>See Also</h4>
+<p>
+<a href="sDrawRectAlpha.html">sDrawRectAlpha</a>,
+<a href="sDrawRect.html">sDrawRect</a>,
+<a href="sDrawRectAddFade.html">sDrawRectAddFade</a>
+</p>
+</body>
+</html>

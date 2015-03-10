@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdSpriteFromJPGFile</h1>
+<p><span style="font-weight: bold;">sdSpriteFromJPGFile</span> creates
+an sSprite from the specified .jpg/.png/.gif file.&nbsp; Useful if you
+want full-color images. (ILB files have 16-bit color)<br>
+You must have called "CoInitialize(0)" at least once before using
+sdSpriteFromJPG<br>
+</p>
+<br>
+<p>sSprite* sdSpriteFromJPGFile(char* lpszFileName);</p>
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>lpszFileName</b></dt>
+  <dd> pointer to a string, containing the file name of an ".jpg" file.</dd>
+</dl>
+<dl>
+</dl>
+<h4>Return Value</h4>
+<p>Returns a pointer to the new sSprite object, or NULL if failed.
+[ASM: modifies only EAX.]
+</p>
+<h4>Example:</h4>
+<p>pAlphaImg1 = sdSpriteFromJPGFile("Smily.jpg");
+</p>
+<br>
+<h4>See Also</h4>
+<p>
+<a href="sdDeleteSprite.html">sdDeleteSprite</a>,
+<a href="sdSpriteFromJPG.html">sdSpriteFromJPG</a>,
+<a href="sdSpriteFromHBITMAP.html">sdSpriteFromHBITMAP</a>,
+<a href="sdStart.html">sdStart</a>,
+<a href="sdSetSourceSprite.html">sdSetSourceSprite</a>
+</p>
+</body>
+</html>

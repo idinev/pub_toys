@@ -1,0 +1,1021 @@
+
+;=====[[ sDrawRect/RectFrame/RectFrame3D >>===\
+sDrawLineH proc PUBLIC UseAll x,y,wid,dwColor
+	mov ecx,x
+	mov edi,y
+	mov eax,wid
+	add ecx,SDDrawOffs.x
+	add edi,SDDrawOffs.y
+	add eax,ecx
+	cmp edi,SDBound.top
+	jl _ret	
+	cmp edi,SDBound.bottom
+	jge _ret
+	
+	cmp ecx,SDBound.left
+	jge @F
+		mov ecx,SDBound.left
+	@@:
+	cmp eax,SDBound.right
+	jle @F
+		mov eax,SDBound.right
+	@@:
+	sub eax,ecx
+	jle _ret
+	imul edi,sTarget_Data.linesize
+	shl ecx,2
+	add edi,sTarget_Data.bits
+	add edi,ecx
+	mov ecx,eax
+	mov eax,dwColor
+	
+	rep stosd
+	
+	
+_ret:	ret
+sDrawLineH endp
+
+
+sDrawLineV proc PUBLIC UseAll x,y,hei,dwColor
+	mov ecx,x
+	mov edi,y
+	mov eax,hei
+	add ecx,SDDrawOffs.x
+	add edi,SDDrawOffs.y
+	add eax,edi
+	
+	cmp ecx,SDBound.left
+	jl _ret
+	cmp ecx,SDBound.right
+	jge _ret
+	
+	cmp edi,SDBound.top
+	jge @F
+		mov edi,SDBound.top
+	@@:
+	cmp eax,SDBound.bottom
+	jle @F
+		mov eax,SDBound.bottom
+	@@:
+	sub eax,edi
+	jle _ret
+	
+	imul edi,sTarget_Data.linesize
+	shl ecx,2
+	add edi,sTarget_Data.bits
+	add edi,ecx
+	mov ecx,dwColor
+	align 16
+	@@:
+		mov [edi],ecx
+		add edi,sTarget_Data.linesize
+	dec eax
+	jnz @B
+	
+_ret:	ret
+sDrawLineV endp
+
+
+
+
+sDrawRect proc PUBLIC UseAll x,y,wid,hei,dwColor
+	local extraDest
+	CHECKDRAWRECT
+	COMPUTEBLTBITS	
+	mov eax,dwColor
+	mov esi,wid
+	mov ebx,hei
+	mov edx,extraDest
+	cld
+	
+	align 16
+	@@:
+		mov ecx,esi
+		rep stosd
+		
+		add edi,edx
+		dec ebx
+	jnz @B
+	
+	
+	
+	
+_ret:	ret
+sDrawRect endp
+
+
+sDrawRectFrame proc PUBLIC UseAll x,y,wid,hei,dwColor
+	cmp wid,0
+	jle _ret
+	cmp hei,0
+	jle _ret
+	invoke sDrawLineH,x,y,wid,dwColor ; top
+	
+	mov eax,y
+	add eax,hei
+	dec eax
+	invoke sDrawLineH,x,eax,wid,dwColor ; bottom
+	
+	invoke sDrawLineV,x,y,hei,dwColor ; left
+	
+	mov eax,x
+	add eax,wid
+	dec eax
+	invoke sDrawLineV,eax,y,hei,dwColor ; right
+	
+_ret:	ret
+sDrawRectFrame endp
+
+sDrawRectFrame3D proc PUBLIC UseAll x,y,wid,hei,dwColor,dwLightColor,dwDarkColor
+	;-------[ if too small ]---------------------[
+	cmp wid,0
+	jle _ret
+	cmp hei,0
+	jle _ret
+	.if wid<3 || hei<3
+		invoke sDrawRect,x,y,wid,hei,dwColor
+		jmp _ret
+	.endif
+	;--------------------------------------------/
+	mov ecx,wid
+	mov edx,hei
+	mov esi,x
+	mov edi,y
+	dec edx
+	invoke sDrawLineH,esi,edi,ecx,dwLightColor ; top line
+	inc edi
+	dec edx
+	dec ecx
+	invoke sDrawLineV,esi,edi,edx,dwLightColor ; left line
+	inc esi
+	dec ecx
+	invoke sDrawRect,esi,edi,ecx,edx,dwColor    ; base color
+	add esi,ecx
+	invoke sDrawLineV,esi,edi,edx,dwDarkColor  ; right line
+	add edi,edx
+	invoke sDrawLineH,x,edi,wid,dwDarkColor    ; bottom line
+	
+	
+_ret:	ret
+sDrawRectFrame3D endp	
+;=======/
+
+
+;=====[[ sBlt   - normal >>===\
+sBlt proc PUBLIC UseAll x,y,wid,hei,x2,y2
+	local extraDest,extraSrc
+	local Alpha,invAlpha,wid2
+	invoke FixupSBLTparams,addr x
+	jz _ret
+	
+	COMPUTEBLTBITS2
+	
+	
+	.if !(sSource_Data.dwFlags & SDRAWSPRITE_HASALPHA)
+		;----------[ draw a normal solid bitmap ]-------[
+		mov ebx,hei
+		mov eax,extraSrc
+		mov edx,extraDest
+		align 16
+		@@:
+			mov ecx,wid
+			rep movsd
+			
+			add esi,eax
+			add edi,edx
+			dec ebx
+		jnz @B
+		;-----------------------------------------------/
+		ret
+		
+	.else
+		
+	    .if sSource_Data.dwFlags & SDRAWSPRITE_PREMULALPHA
+		;---------[ draw a bitmap that has premultiplied alpha-channel ]-------------------------[
+		@@:
+		m2m wid2,wid
+		align 16
+			_nextpix:
+			mov eax,[esi]
+			mov ecx,[edi]
+			
+			mov ebx,eax
+			shr ebx,24
+			jz _zeroalpha
+			sub ebx,256
+			neg ebx
+			
+			mov edx,ecx
+			
+			and ecx,0FF00FFh
+			and edx,000FF00h
+			imul ecx,ebx
+			imul edx,ebx
+			and ecx,0FF00FF00h
+			and edx,000FF0000h
+			or ecx,edx
+			shr ecx,8
+			add ecx,eax
+			mov [edi],ecx
+			
+			_zeroalpha:
+			
+			add esi,4
+			add edi,4
+			dec wid2
+			jnz _nextpix
+			
+			add esi,extraSrc
+			add edi,extraDest
+			dec hei
+		jnz @B
+		ret
+		;----------------------------------------------------------------------------------------/
+	    .else
+		;-----[ draw a bitmap that has alpha-channel ]-------[
+		@@:
+		m2m wid2,wid
+		align 16
+			_nextpix2:
+			mov eax,[esi]
+			mov ecx,[edi]
+			;-----[ get alpha ]-----[
+			mov edx,256
+			mov ebx,eax
+			shr ebx,24
+			jz _zeroalpha2
+			sub edx,ebx
+			mov Alpha,ebx
+			mov invAlpha,edx
+			;-----------------------/
+			
+			mov ebx,eax
+			mov edx,ecx
+			
+			and eax,0FF00FFh
+			and ecx,0FF00FFh
+			and ebx,000FF00h
+			and edx,000FF00h
+			imul eax,Alpha
+			imul ecx,invAlpha
+			imul ebx,Alpha
+			imul edx,invAlpha
+			add eax,ecx
+			add ebx,edx
+			and eax,0FF00FF00h
+			and ebx,000FF0000h
+			or eax,ebx
+			shr eax,8
+			mov [edi],eax
+			
+			
+			
+			_zeroalpha2:
+			
+			
+			
+			add esi,4
+			add edi,4
+			dec wid2
+			jnz _nextpix2
+			
+			add esi,extraSrc
+			add edi,extraDest
+			dec hei
+		jnz @B
+		ret
+		;----------------------------------------------------/
+	    .endif
+		
+	.endif
+	
+	
+_ret:	ret
+sBlt endp
+;=======/
+
+
+sBltTile proc PUBLIC uses eax ebx ecx edx TileX,TileY,TileWidth,TileHeight,SpriteX,SpriteY,SpriteWid,SpriteHei,StartX,StartY
+	invoke sdEnterClip,TileX,TileY,TileWidth,TileHeight
+	
+	neg StartX
+	neg StartY
+	
+	mov edx,StartY
+	.while edx<TileHeight
+		mov ecx,StartX
+		.while ecx<TileWidth
+			invoke sBlt,ecx,edx,SpriteWid,SpriteHei,SpriteX,SpriteY
+			add ecx,SpriteWid
+		.endw
+		add edx,SpriteHei
+	.endw
+	
+	invoke sdLeaveClip
+	ret
+sBltTile endp
+
+
+
+
+;=====[[ sdGet/Set/SetPixelA >>===\
+sdGetPixel proc PUBLIC uses ecx edx x,y
+	mov ecx,x
+	mov edx,y
+	add ecx,SDDrawOffs.x
+	add edx,SDDrawOffs.y
+	xor eax,eax
+	
+	cmp ecx,SDBound.left
+	jl _ret
+	cmp ecx,SDBound.right
+	jge _ret
+	cmp edx,SDBound.top
+	jl _ret
+	cmp edx,SDBound.bottom
+	jge _ret
+	imul edx,sTarget_Data.wid
+	mov eax,sTarget_Data.bits
+	add ecx,edx
+	mov eax,[eax+ecx*4]
+	and eax,0FFFFFFh
+	
+_ret:	ret
+sdGetPixel endp
+
+sdSetPixel proc PUBLIC uses eax ecx edx x,y,dwColor
+	mov ecx,x
+	mov edx,y
+	add ecx,SDDrawOffs.x
+	add edx,SDDrawOffs.y
+	xor eax,eax
+	
+	cmp ecx,SDBound.left
+	jl _ret
+	cmp ecx,SDBound.right
+	jge _ret
+	cmp edx,SDBound.top
+	jl _ret
+	cmp edx,SDBound.bottom
+	jge _ret
+	imul edx,sTarget_Data.wid
+	mov eax,sTarget_Data.bits
+	add ecx,edx
+	mov edx,dwColor
+	mov [eax+ecx*4],edx
+	
+_ret:	ret
+sdSetPixel endp
+
+sdSetPixelA proc PUBLIC uses eax ecx ebx edx edi x,y,dwColor,Alpha
+	cmp Alpha,0
+	jle _ret
+	mov ecx,x
+	mov edx,y
+	add ecx,SDDrawOffs.x
+	add edx,SDDrawOffs.y
+	xor eax,eax
+	
+	cmp ecx,SDBound.left
+	jl _ret
+	cmp ecx,SDBound.right
+	jge _ret
+	cmp edx,SDBound.top
+	jl _ret
+	cmp edx,SDBound.bottom
+	jge _ret
+	
+	
+	
+	;---[ compute edi ]----------------[
+	imul edx,sTarget_Data.wid
+	mov edi,sTarget_Data.bits
+	add ecx,edx
+	lea edi,[edi+ecx*4]
+	;----------------------------------/
+	;---[ compute invAlpha ]---------[
+	.if Alpha>255
+		push dwColor
+		pop dword ptr[edi]
+		jmp _ret
+	.endif
+	mov edx,256
+	sub edx,Alpha
+	mov y,edx ; y = invAlpha
+	;--------------------------------/
+	
+	
+	
+	mov eax,dwColor
+	mov ecx,[edi]
+	mov ebx,eax
+	mov edx,ecx
+	and eax,0FF00FFh
+	and ecx,0FF00FFh
+	and ebx,000FF00h
+	and edx,000FF00h
+	imul eax,Alpha
+	imul ecx,y;invAlpha
+	imul ebx,Alpha
+	imul edx,y;invAlpha
+	add eax,ecx
+	add ebx,edx
+	and eax,0FF00FF00h
+	and ebx,000FF0000h
+	or eax,ebx
+	shr eax,8
+	mov [edi],eax
+	
+	
+_ret:	ret
+sdSetPixelA endp
+;=======/
+
+
+;=====[[ sDrawLine - normal >>===\
+SD_DRAWLINE_EXTRALAPHA equ 64
+sDrawLine proc PUBLIC UseAll x,y,x2,y2,dwColor
+	local idx,idy
+	local zdx,zdy
+	
+	;-----[ check if completely outside cliprect ]-----\
+	mov esi,SDDrawOffs.x
+	mov edi,SDDrawOffs.y
+	mov eax,x
+	mov ebx,y
+	mov ecx,x2
+	mov edx,y2
+	add eax,esi
+	add ebx,edi
+	add ecx,esi
+	add edx,edi
+	cmp eax,ecx
+	jle @F
+	xchg eax,ecx
+	@@:
+	cmp ebx,edx
+	jle @F
+	xchg ebx,edx
+	@@:
+	; eax=minx, ebx=miny, ecx=maxx, edx=maxy
+	cmp eax,SDBound.right
+	jg _ret
+	cmp ebx,SDBound.bottom
+	jg _ret
+	cmp ecx,SDBound.left
+	jl _ret
+	cmp edx,SDBound.top
+	jl _ret
+	;--------------------------------------------------/
+	
+	
+	;--------[ check if too long ]---------------\
+	sub ecx,eax
+	sub edx,ebx
+	add ecx,edx
+	.if ecx>100
+		mov eax,x
+		mov ecx,y
+		add eax,x2
+		add ecx,y2
+		sar eax,1
+		sar ecx,1
+		invoke sDrawLine,x,y,eax,ecx,dwColor
+		invoke sDrawLine,eax,ecx,x2,y2,dwColor
+		ret
+	.endif
+	;--------------------------------------------/
+	
+	
+	
+	mov idx,-1
+	mov idy,-1
+	mov eax,x
+	sub eax,x2
+	mov zdx,eax
+	.if sign?
+		neg eax
+		neg idx
+	.endif
+	mov edx,y
+	sub edx,y2
+	mov zdy,edx
+	.if sign?
+		neg edx
+		neg idy
+	.endif
+	
+	.if zdx==0 && zdy==0
+		invoke sdSetPixel,x,y,dwColor
+		ret
+	.endif
+	
+	.if eax<=edx	
+		;mov dwColor,255
+		shl zdx,16
+		fild zdx
+		fidiv zdy
+		fimul idy
+		fistp idx
+		
+		mov eax,x
+		shl eax,16
+		mov ecx,y
+		.while ecx!=y2
+			mov edx,eax
+			sar edx,16
+			movzx ebx,ah
+			push ebx
+			sub ebx,255+SD_DRAWLINE_EXTRALAPHA
+			neg ebx
+			invoke sdSetPixelA,edx,ecx,dwColor,ebx
+			pop ebx
+			inc edx
+			add ebx,SD_DRAWLINE_EXTRALAPHA
+			invoke sdSetPixelA,edx,ecx,dwColor,ebx
+			
+			add eax,idx
+			add ecx,idy
+		.endw
+		ret
+	.else
+		shl zdy,16
+		fild zdy
+		fidiv zdx
+		fimul idx
+		fistp idy
+		
+		mov eax,x
+		mov ecx,y
+		shl ecx,16
+		.while eax!=x2
+			mov edx,ecx
+			sar edx,16
+			movzx ebx,ch
+			push ebx
+			sub ebx,255+SD_DRAWLINE_EXTRALAPHA
+			neg ebx
+			invoke sdSetPixelA,eax,edx,dwColor,ebx
+			pop ebx
+			inc edx 
+			add ebx,SD_DRAWLINE_EXTRALAPHA
+			invoke sdSetPixelA,eax,edx,dwColor,ebx
+			
+			add eax,idx
+			add ecx,idy
+		.endw		
+		ret
+	.endif
+		
+	
+	
+	
+_ret:	ret
+sDrawLine endp
+;=======/
+
+;=====<< sDrawFastLine >>===\
+sDrawFastLine proc PUBLIC UseAll x0,y0,x1,y1,dwColor
+	local steep
+	local stepy,stepx
+	
+	;-----[ check if completely outside cliprect ]-----\
+	mov esi,SDDrawOffs.x
+	mov edi,SDDrawOffs.y
+	mov eax,x0
+	mov ebx,y0
+	mov ecx,x1
+	mov edx,y1
+	.if eax==ecx && ebx==edx
+		invoke sdSetPixel,eax,ebx,dwColor
+	.endif	
+	add eax,esi
+	add ebx,edi
+	add ecx,esi
+	add edx,edi
+	cmp eax,ecx
+	jle @F
+	xchg eax,ecx
+	@@:
+	cmp ebx,edx
+	jle @F
+	xchg ebx,edx
+	@@:
+	
+	; eax=minx, ebx=miny, ecx=maxx, edx=maxy
+	cmp eax,SDBound.right
+	jg _ret
+	cmp ebx,SDBound.bottom
+	jg _ret
+	cmp ecx,SDBound.left
+	jl _ret
+	cmp edx,SDBound.top
+	jl _ret
+	
+	sub x0,esi
+	sub y0,esi
+	sub x1,esi
+	sub y1,esi
+	;--------------------------------------------------/
+	
+	
+	;------[ check steepness ]-----\
+	mov eax,y0
+	sub eax,y1
+	mov edx,x0
+	sub edx,x1
+	mov ecx,eax
+	sar ecx,31
+	add eax,ecx
+	xor eax,ecx
+	mov ecx,edx
+	sar ecx,31
+	add edx,ecx
+	xor edx,ecx
+	cmp eax,edx
+	
+	mov steep,0
+	mov stepx,1
+	mov stepy,1
+	
+	mov eax,x0  ; eax = x0
+	mov ebx,y0  ; ebx = y0 
+	mov ecx,x1  ; ecx = x1
+	mov edx,y1  ; edx = y1
+	
+	.if !SIGN? ; abs(y1 - y0) > abs(x1 - x0)
+		mov steep,1
+		xchg eax,ebx
+		xchg ecx,edx
+	.endif
+	
+	cmp eax,ecx
+	jle @F
+		neg stepx
+	@@:
+	mov x0,eax
+	mov y0,ebx
+	mov x1,ecx
+	mov y1,edx
+	;------------------------------/
+	
+	sub ecx,eax ; ecx = deltax
+	mov esi,ecx
+	sar esi,31
+	add ecx,esi
+	xor ecx,esi
+	mov edi,ecx
+	shr edi,1   ; edi = deltax/2
+	sub edx,ebx
+	mov esi,edx
+	sar esi,31
+	add edx,esi
+	xor edx,esi ; edx = deltay
+	
+	xor esi,esi ; esi = error
+	
+	
+	cmp ebx,y1
+	jl @F
+		neg stepy
+	@@:
+	
+	; now   EAX=x0, EBX=y0, ECX=deltax, EDX=deltay, ESI=error, EDI=deltax/2
+	
+	
+	align 16
+	next_X:
+	cmp eax,x1
+	je _ret
+	.if steep		
+		invoke sdSetPixel,ebx,eax,dwColor
+	.else
+		invoke sdSetPixel,eax,ebx,dwColor
+	.endif
+	add eax,stepx
+	
+	add esi,edx ; error+=deltay
+	cmp esi,edi
+	jl next_X
+	add ebx,stepy
+	sub esi,ecx
+	jmp next_X
+	
+	
+	
+_ret:	ret
+sDrawFastLine endp
+;=======/
+
+
+;=====<< sDrawLineCustom >>===\
+sDrawLineCustom proc PUBLIC UseAll x0,y0,x1,y1,pfCallback,dwWidth,dwColor
+	local steep
+	local stepy,stepx
+	
+	;-----[ check if completely outside cliprect ]-----\
+	mov esi,SDDrawOffs.x
+	mov edi,SDDrawOffs.y
+	mov eax,x0
+	mov ebx,y0
+	mov ecx,x1
+	mov edx,y1
+	add eax,esi
+	add ebx,edi
+	add ecx,esi
+	add edx,edi
+	cmp eax,ecx
+	jle @F
+	xchg eax,ecx
+	@@:
+	cmp ebx,edx
+	jle @F
+	xchg ebx,edx
+	@@:
+	mov esi,dwWidth
+	mov edi,esi
+	shr esi,1
+	sub edi,esi
+	
+	sub eax,esi
+	sub ebx,esi
+	add ecx,edi
+	add edx,edi
+	
+	; eax=minx, ebx=miny, ecx=maxx, edx=maxy
+	cmp eax,SDBound.right
+	jg _ret
+	cmp ebx,SDBound.bottom
+	jg _ret
+	cmp ecx,SDBound.left
+	jl _ret
+	cmp edx,SDBound.top
+	jl _ret
+	
+	sub x0,esi
+	sub y0,esi
+	sub x1,esi
+	sub y1,esi
+	;--------------------------------------------------/
+	
+	
+	;------[ check steepness ]-----\
+	mov eax,y0
+	sub eax,y1
+	mov edx,x0
+	sub edx,x1
+	mov ecx,eax
+	sar ecx,31
+	add eax,ecx
+	xor eax,ecx
+	mov ecx,edx
+	sar ecx,31
+	add edx,ecx
+	xor edx,ecx
+	cmp eax,edx
+	
+	mov steep,0
+	mov stepx,1
+	mov stepy,1
+	
+	mov eax,x0  ; eax = x0
+	mov ebx,y0  ; ebx = y0 
+	mov ecx,x1  ; ecx = x1
+	mov edx,y1  ; edx = y1
+	
+	.if !SIGN? ; abs(y1 - y0) > abs(x1 - x0)
+		mov steep,1
+		xchg eax,ebx
+		xchg ecx,edx
+	.endif
+	
+	cmp eax,ecx
+	jle @F
+		neg stepx
+	@@:
+	mov x0,eax
+	mov y0,ebx
+	mov x1,ecx
+	mov y1,edx
+	;------------------------------/
+	
+	sub ecx,eax ; ecx = deltax
+	mov esi,ecx
+	sar esi,31
+	add ecx,esi
+	xor ecx,esi
+	mov edi,ecx
+	shr edi,1   ; edi = deltax/2
+	sub edx,ebx
+	mov esi,edx
+	sar esi,31
+	add edx,esi
+	xor edx,esi ; edx = deltay
+	
+	xor esi,esi ; esi = error
+	
+	
+	cmp ebx,y1
+	jl @F
+		neg stepy
+	@@:
+	
+	; now   EAX=x0, EBX=y0, ECX=deltax, EDX=deltay, ESI=error, EDI=deltax/2
+	
+	
+	align 16
+	next_X:
+	cmp eax,x1
+	je _ret
+	push dwColor
+	.if steep
+		push eax
+		push ebx
+	.else
+		push ebx
+		push eax
+	.endif
+	call pfCallback
+	
+	add eax,stepx
+	
+	add esi,edx ; error+=deltay
+	cmp esi,edi
+	jl next_X
+	add ebx,stepy
+	sub esi,ecx
+	jmp next_X
+	
+	
+_ret:	ret
+sDrawLineCustom endp
+;=======/
+
+
+;=====<< sDrawBSpline >>===\
+.data
+	BSplineShader 	dd 0
+	BSplineShadeWid dd 1
+.code
+	
+sDrawBSpline proc PUBLIC UseAll pSpline:ptr SDSPLINE,numPoints,dwColor
+	local xa,xb,xc
+	local ya,yb,yc
+	local deltaT:real8,curT:real8
+	local curX,curY,nX,nY
+	
+	mov ecx,pSpline
+	test ecx,ecx
+	jz _ret
+	assume ecx:ptr SDSPLINE
+	
+	; C = 3.0 * (cp[1] - cp[0]);
+	mov eax,[ecx].p1.x
+	mov edx,[ecx].p1.y
+	sub eax,[ecx].p0.x
+	sub edx,[ecx].p0.y
+	lea eax,[eax+eax*2]
+	lea edx,[edx+edx*2]
+	mov xc,eax
+	mov yc,edx
+	
+	; B = 3.0 * (cp[2] - cp[1]) - C;
+	mov eax,[ecx].p2.x
+	mov edx,[ecx].p2.y
+	sub eax,[ecx].p1.x
+	sub edx,[ecx].p1.y
+	lea eax,[eax+eax*2]
+	lea edx,[edx+edx*2]
+	sub eax,xc
+	sub edx,yc
+	mov xb,eax
+	mov yb,edx
+	
+	; A = cp[3].x - cp[0].x - cx - bx;
+	mov eax,[ecx].p3.x
+	mov edx,[ecx].p3.y
+	sub eax,[ecx].p0.x
+	sub edx,[ecx].p0.y
+	sub eax,xc
+	sub edx,yc
+	sub eax,xb
+	sub edx,yb
+	mov xa,eax
+	mov ya,edx
+	
+	;--------[ compute numPoints if necessary ]----------\
+	.if numPoints==0
+		;----[ compute average point of p1 & p2 ]--\
+		mov eax,[ecx].p2.x
+		mov edx,[ecx].p2.y
+		add eax,[ecx].p1.x
+		add edx,[ecx].p1.y
+		sar eax,1
+		sar edx,1
+		mov nX,eax ; store it temporarily in nX:nY
+		mov nY,eax
+		;------------------------------------------/
+		
+		;----[ compute sqr of len p0:pN ]--\
+		fild [ecx].p0.x
+		fisub nX
+		fmul ST,ST
+		fild [ecx].p0.y
+		fisub nY
+		fmul ST,ST
+		fadd
+		;----------------------------------/
+		;----[ compute sqr of len p3:pN ]--\
+		fild [ecx].p3.x
+		fisub nX
+		fmul ST,ST
+		fild [ecx].p3.y
+		fisub nY
+		fmul ST,ST
+		fadd
+		;----------------------------------/
+		fadd
+		fsqrt
+		fistp numPoints
+		shr numPoints,3
+		add numPoints,4		
+	.endif
+	;----------------------------------------------------/
+	
+	
+	
+	
+	fld1
+	fidiv numPoints
+	fst deltaT
+	fstp curT
+	m2m curX,[ecx].p0.x
+	m2m curY,[ecx].p0.y
+	
+	@@:
+		; nX = 	(ax * tCubed) + (bx * tSquared) + (cx * t) + cp[0].x;
+		fild [ecx].p0.x
+		fild xc
+		fmul curT
+		fadd
+		fild xb
+		fmul curT
+		fmul curT
+		fadd
+		fild xa
+		fmul curT
+		fmul curT
+		fmul curT
+		fadd
+		fistp nX
+		
+		; nY = 	(ay * tCubed) + (by * tSquared) + (cy * t) + cp[0].y;
+		fild [ecx].p0.y
+		fild yc
+		fmul curT
+		fadd
+		fild yb
+		fmul curT
+		fmul curT
+		fadd
+		fild ya
+		fmul curT
+		fmul curT
+		fmul curT
+		fadd
+		fistp nY
+		
+		.if !BSplineShader
+			invoke sDrawLine,curX,curY,nX,nY,dwColor
+		.else
+			invoke sDrawLineCustom,curX,curY,nX,nY,BSplineShader,BSplineShadeWid,dwColor
+		.endif
+		
+		
+		
+		m2m curX,nX
+		m2m curY,nY
+		fld curT
+		fadd deltaT
+		fstp curT
+	dec numPoints
+	jnz @B
+	
+	
+	
+	assume ecx:nothing
+_ret:	ret
+sDrawBSpline endp
+
+sDrawBSplineShade proc PUBLIC pSpline:ptr SDSPLINE,numPoints,dwColor,pShadeFunc,ShadeWid
+	m2m BSplineShader,pShadeFunc
+	m2m BSplineShadeWid,ShadeWid
+	
+	invoke sDrawBSpline,pSpline,numPoints,dwColor
+	
+	mov BSplineShader,0
+	mov BSplineShadeWid,1
+	ret
+sDrawBSplineShade endp
+;=======/
+

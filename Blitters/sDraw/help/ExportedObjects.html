@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>Exported objects (variables) from sDraw</h1>
+<br>
+<span style="font-weight: bold;">long SD_TransparentColor;</span> //
+transparent color, used in <a href="sBltTrans.html">sBltTrans()</a>
+and <a href="sBltTransAlpha.html">sBltTransAlpha</a>(). By default it
+is magenta (0xFF00FF)<br>
+<br>
+<span style="font-weight: bold;">void* SD_CurFont;</span> // pointer to
+the currently-selected font. Use it to change the font before calls to
+<a href="sTextOut.html">sTextOut</a>(), <a href="sdPrintDec.html">sdPrintDec</a>()
+and sTextOUTGetDrawnSize() .<br>
+<br>
+<p><font color="red"><i>Expert access only<span
+ style="font-weight: bold;">:</span></i></font></p>
+<p><span style="font-weight: bold;">RECT SDBound;</span> // current
+clipping-rectangle. Its position is absolute in the Client Area of the
+currently-drawn window. Adjusted by <a href="sdEnterClip.html">sdEnterClip()</a><br>
+</p>
+<p><span style="font-weight: bold;">POINT SDDrawOffs;</span> // current
+X:Y offset for drawing operations. Again absolute in the Client Area of
+the currently-drawn window. Adjusted by sdEnterClip()</p>
+<p><span style="font-weight: bold;">sSprite sTarget_Data;</span> //
+data of the target-sprite. Get size and pointer to the bits from it.
+Filled-in by <a href="sdSetSourceSprite.html">sdSetSourceSprite</a><br>
+</p>
+<p><span style="font-weight: bold;">sSprite sSource_Data;</span> //
+data of the source-sprite. Get size and pointer to the bits from it.
+Filled-in by <a href="sdSetTargetSprite.html">sdSetTargetSprite</a><br>
+<br>
+<span style="font-weight: bold;">HDC SDBackDC;</span> // the GDI
+DeviceContext, that sDraw draws on (it's the back-buffer! ). When using
+GDI funcs on it, remember to adjust via SDDrawOffs !!<br>
+</p>
+<br>
+</body>
+</html>

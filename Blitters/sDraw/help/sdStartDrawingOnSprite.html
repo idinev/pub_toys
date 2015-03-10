@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdStartDrawingOnSprite</h1>
+<p><font color="red"><i>Expert access only</i></font></p>
+<p><span style="font-weight: bold;">sdStartDrawingOnSprite</span>
+prepares the clipper and target-sprite for drawing on the whole
+specified sprite<br>
+<span style="font-weight: bold;">sdEndDrawingOnSprite</span> ends that
+operation, restores the previous state of the clipper.<br>
+</p>
+<br>
+<p>void sdStartDrawingOnSprite(sSprite* pTargetSprite);<br>
+void sdEndDrawingOnSprite();<br>
+</p>
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>pTargetSprite</b></dt>
+  <dd>sprite, on which to draw from now-on. The clipper is adjusted to
+start drawing at 0:0, and to match the size of the sprite.&nbsp; <br>
+  </dd>
+</dl>
+<dl>
+</dl>
+<h4>Return Value</h4>
+<p>All registers are preserved. </p>
+<h4>Example:</h4>
+<p>
+</p>
+<pre>	sdStartDrawingOnSprite(pSprite1);<br>		sDrawRect(7,7,200,200,0xFF0000); // red<br>	sdEndDrawingOnSprite();<br></pre>
+<pre>	</pre>
+<h4>Remarks</h4>
+You can do internal clipping with sdEnterClip() and sdLeaveClip(), and
+even nest it. <br>
+You <span style="font-weight: bold;">cannot</span> nest calls of
+sdStartDrawingOnSprite! Not that you'd ever need that...<br>
+<h4>See Also</h4>
+<p>
+<a href="sdLeaveClip.html">sdLeaveClip</a>,
+<a href="sdForceClip.html">sdForceClip</a>
+</p>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sBltTile</h1>
+<p><span style="font-weight: bold;">sBltTile</span> performs multiple sBlt() calls, to fill in the TileX:TileY-TileWidth:TileHeight rectangle.
+The small rectangle to be used as a tile is specified by SpriteX:SpriteY-SpriteWid:SpriteHei. An additional offset is specified by StartX:StartY.
+</p>
+<BR>
+<p>void sBltTile(long TileX,long TileY,long TileWidth,long TileHeight,
+			  long SpriteX,long SpriteY,long SpriteWid,long SpriteHei,
+			  long StartX,long StartY);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>TileX,TileY,TileWidth,TileHeight</b></dt>
+  <dd>target rectangle</dd>
+  <dt> <b>SpriteX,SpriteY,SpriteWid,SpriteHei</b></dt>
+  <dd>source rectangle</dd>
+  <dt> <b>StartX,StartY</b></dt>
+  <dd>a positive or zero offset from the source rectangle. Usually, StartX=0 and StartY=0. Ideally, StartX=0..SpriteWid,  StartY=0..SpriteHei</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>sBltTile(0,0,400,300, 0,0,64,64, 0,0);
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+sBltTile is not optimized. It calls sBlt() many times, without getting any hint whether it could stop earlier (due to clipping). 
+Thus, using a tiny source-rectangle generally isn't a good idea. 40x40 source-rectangles and above are best, as regards speed. 
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sBlt.html">sBlt</a>,
+<a href="sdSetSourceSprite.html">sdSetSourceSprite</a>
+</p>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdPreprocessSprite</h1>
+<p><span style="font-weight: bold;">sdPreprocessSprite</span> performs one of the pre-processing operations on an sSprite</p>
+<BR>
+<p>void sdPreprocessSprite(sSprite* pSprite,long dwOperationID,long dwColor);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>pSprite</b></dt>
+  <dd>sSprite to be preprocessed</dd>
+  <dt> <b>dwOperationID</b></dt>
+  <dd>type of operation(processing) to be performed on the sSprite</dd>
+  <dt> <b>dwColor</b></dt>
+  <dd>argument to the operation</dd>
+</dl>
+<dl>
+</dl>
+
+
+<h4>Available operations:</h4>
+<dl>
+	<dt> <b>SDPREPR_ALPHA_FROM_COLOR</b></dt>
+	<dd> constructs alpha-channel by distance of pixels from dwColor</dd>
+	<dt> <b>SDPREPR_PREMULTIPLY_ALPHA</b></dt>
+	<dd> premultiplies the alpha-channel, for 2x faster sBlt(). For each ARGB pixel, preserves the A component, while RGB are made darker. <B>Note:</b> This darkening of RGB can/will make this sSprite useless for calls to sBltAlpha, sBltAdd,sBltAddFade! <B>dwColor</b> is not used here.</dd>
+</dl>
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>sdPreprocessSprite(pSprite1,SDPREPR_ALPHA_FROM_COLOR,0xFF00FF);<BR><BR>
+sdPreprocessSprite(pSpriteWithAlpha2,SDPREPR_PREMULTIPLY_ALPHA,0);
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+SDPREPR_ALPHA_FROM_COLOR sets the SDRAWSPRITE_HASALPHA flag of the sSprite.<BR>
+SDPREPR_PREMULTIPLY_ALPHA sets the SDRAWSPRITE_PREMULALPHA flag of the sSprite.<BR>
+These two flags are used in sBlt() to determine which of its 3 internal transfers/blends to perform. <BR>
+The first flag is used in sBltAlpha() to determine which of its 2 internal blends to perform. 
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sBltParam.html">sBltParam</a>,
+<a href="sBlt.html">sBlt</a>,
+<a href="sdSetSourceSprite.html">sdSetSourceSprite</a>
+</p>
+</body>
+</html>

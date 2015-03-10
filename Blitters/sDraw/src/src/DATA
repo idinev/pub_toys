@@ -1,0 +1,80 @@
+USE_BANK 	= 0
+COMPILE_AS_DLL	= 0
+COMPILE_AS_EXE  = 0
+INCLUDE_COPYRIGHT_TEXT = 1
+ALLOW_EXTERNAL_LIBS = 1
+
+
+
+if USE_BANK
+	include \masm32\ultrano\bank\base.inc
+	HEAP2 textequ <HEAP1>
+else
+	include src\CompatLayer.inc	
+endif
+
+include ../sDraw.inc
+
+if ALLOW_EXTERNAL_LIBS
+includelib \masm32\lib\ole32.lib
+includelib \masm32\lib\olepro32.lib
+endif
+
+
+option PROC:PRIVATE
+
+public SD_TransparentColor
+public SD_CurFont
+public sTarget_Data
+public sSource_Data
+	
+
+SRECT STRUCT
+  left    SDWORD ?
+  top     SDWORD ?
+  right   SDWORD ?
+  bottom  SDWORD ?
+SRECT ENDS
+
+SBLTPARAM struct
+	x dd ?
+	y dd ?
+	wid dd ?
+	hei dd ?
+	x2 dd ?
+	y2 dd ?
+SBLTPARAM ends
+
+
+backDC textequ <SDBackDC>
+public backDC
+public SDhDC
+
+.data
+	SD_TransparentColor	dd 0FF00FFh
+	SD_CurFont 		dd 0
+.data?
+	align 16
+	SDBound 	SRECT <>	
+	SDOriginalBound	SRECT <>
+	
+	SDDrawOffs	POINT <>
+	ScreenSize	POINT <>
+	
+	SDhWnd		dd ?
+	SDhDC		dd ?
+	
+	backDC		dd ?
+	backDC_PrevHBmp	dd ?
+	
+	SD_BackSprite	dd ?
+	
+	
+	align 16
+	sTarget_Data	sSprite <>
+	sSource_Data	sSprite <>
+	
+	pTargetSprite	dd ?
+	pSourceSprite	dd ?
+.code
+	

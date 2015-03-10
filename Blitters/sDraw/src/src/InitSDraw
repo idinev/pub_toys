@@ -1,0 +1,424 @@
+
+InitSDraw proc PUBLIC UseAll wid,hei
+	
+	local DesktopDC
+	local bits
+	.if !wid
+		invoke GetSystemMetrics,SM_CXSCREEN
+		mov wid,eax
+	.endif
+	.if !hei
+		invoke GetSystemMetrics,SM_CYSCREEN
+		mov hei,eax
+	.endif
+	m2m ScreenSize.x,wid
+	m2m ScreenSize.y,hei
+	
+	
+	;---------[ make backDC ]----------[
+	invoke GetDC,0
+	mov DesktopDC,eax
+	invoke CreateCompatibleDC,eax
+	mov backDC,eax
+	invoke ReleaseDC,0,DesktopDC
+	;----------------------------------/
+	
+	invoke CreateDIBsprite,wid,hei
+	mov SD_BackSprite,eax
+	invoke SelectObject,backDC,[eax].sSprite.hBitmap
+	mov backDC_PrevHBmp,eax
+	
+	
+	ret
+InitSDraw endp
+
+ResizeSDrawArea proc PUBLIC UseAll wid,hei
+	;-------[ check params ]---------------------[
+	.if !wid
+		invoke GetSystemMetrics,SM_CXSCREEN
+		mov wid,eax
+	.endif
+	.if !hei
+		invoke GetSystemMetrics,SM_CYSCREEN
+		mov hei,eax
+	.endif
+	;--------------------------------------------/
+	
+	;-----[ exit if no actual change ]---------[
+	mov eax,wid
+	mov edx,hei
+	.if eax==ScreenSize.x && edx==ScreenSize.y
+		ret
+	.endif
+	;------------------------------------------/
+	
+	m2m ScreenSize.x,wid
+	m2m ScreenSize.y,hei
+	
+	;-------[ replace the DIBsprite ]-----------[
+	invoke SelectObject,backDC,backDC_PrevHBmp
+	mov eax,SD_BackSprite
+	invoke DeleteObject,[eax].sSprite.hBitmap
+	free SD_BackSprite
+	invoke CreateDIBsprite,wid,hei
+	mov SD_BackSprite,eax
+	invoke SelectObject,backDC,[eax].sSprite.hBitmap
+	mov backDC_PrevHBmp,eax
+	invoke sdSetTargetSprite,0
+	;-------------------------------------------/
+	
+	
+	
+	ret
+ResizeSDrawArea endp
+
+
+FreeSDraw proc PUBLIC UseAll
+	invoke sdDeleteAllSprites ; unnecessary
+	
+	;--------[ free the main DIB ]--------------------[
+	invoke SelectObject,backDC,backDC_PrevHBmp
+	mov eax,SD_BackSprite
+	invoke DeleteObject,[eax].sSprite.hBitmap
+	free SD_BackSprite
+	invoke DeleteObject,backDC
+	mov SD_BackSprite,0
+	mov backDC,0
+	;-------------------------------------------------/
+	
+	
+	ifndef HEAP1
+		invoke HeapDestroy,HEAP2
+		mov HEAP2,0
+	endif
+	
+	ret
+FreeSDraw endp
+
+
+
+
+
+
+
+sdGetCtlVariable proc PUBLIC VariableID
+	mov eax,VariableID
+	.if eax==SDVAR_ID_SD_TransparentColor
+		mov eax,SD_TransparentColor
+		ret
+	.elseif eax==SDVAR_ID_SD_CurFont
+		mov eax,SD_CurFont
+		ret
+	.elseif eax==SDVAR_ID_SDBound_ptr
+		lea eax,SDBound
+		ret
+	.elseif eax==SDVAR_ID_SDDrawOffs_ptr
+		lea eax,SDDrawOffs
+		ret
+	.elseif eax==SDVAR_ID_sTarget_Data
+		lea eax,sTarget_Data
+		ret
+	.elseif eax==SDVAR_ID_sSource_Data
+		lea eax,sSource_Data
+		ret
+	.elseif eax==SDVAR_ID_SDBackDC
+		mov eax,SDBackDC
+		ret
+	.elseif eax==SDVAR_ID_SDhDC
+		mov eax,SDhDC
+		ret
+	.endif
+	xor eax,eax
+	ret
+sdGetCtlVariable endp
+
+
+sdSetCtlVariable proc PUBLIC VariableID,Value
+	.if VariableID==SDVAR_ID_SD_TransparentColor
+		m2m SD_TransparentColor,Value
+	.elseif VariableID==SDVAR_ID_SD_CurFont
+		m2m SD_CurFont,Value
+	.endif
+	ret
+sdSetCtlVariable endp	
+
+
+
+.data?
+	sdSDOS_Prev_DOx dd ?
+	sdSDOS_Prev_DOy dd ?
+	sdSDOS_Prev_DBl dd ?
+	sdSDOS_Prev_DBr dd ?
+	sdSDOS_Prev_DBt dd ?
+	sdSDOS_Prev_DBb dd ?
+	sdSDOS_Prev_OBl dd ?
+	sdSDOS_Prev_OBr dd ?
+	sdSDOS_Prev_OBt dd ?
+	sdSDOS_Prev_OBb dd ?
+	sdSDOS_Prev_PSS dd ?
+	sdSDOS_Prev_PTS dd ?
+	
+.code
+	
+sdStartDrawingOnSprite proc PUBLIC UseAll TargetSprite
+	;-------[ save current state ]-----[
+	push SDDrawOffs.x
+	push SDDrawOffs.y
+	push SDBound.left
+	push SDBound.right
+	push SDBound.top
+	push SDBound.bottom
+	push SDOriginalBound.left
+	push SDOriginalBound.right
+	push SDOriginalBound.top
+	push SDOriginalBound.bottom
+	push pSourceSprite
+	push pTargetSprite
+	
+	pop sdSDOS_Prev_PTS
+	pop sdSDOS_Prev_PSS 
+	pop sdSDOS_Prev_OBb 
+	pop sdSDOS_Prev_OBt 
+	pop sdSDOS_Prev_OBr 
+	pop sdSDOS_Prev_OBl 
+	pop sdSDOS_Prev_DBb 
+	pop sdSDOS_Prev_DBt 
+	pop sdSDOS_Prev_DBr 
+	pop sdSDOS_Prev_DBl 
+	pop sdSDOS_Prev_DOy
+	pop sdSDOS_Prev_DOx
+	;----------------------------------/
+	
+	
+	
+	mov ecx,TargetSprite
+	xor eax,eax
+	
+	mov SDDrawOffs.x,eax
+	mov SDDrawOffs.y,eax
+	mov SDBound.left,eax
+	mov SDBound.top,eax
+	m2m SDBound.right,[ecx].sSprite.wid
+	m2m SDBound.bottom,[ecx].sSprite.hei
+	
+	m2m SDOriginalBound.left,  SDBound.left
+	m2m SDOriginalBound.top,   SDBound.top
+	m2m SDOriginalBound.right, SDBound.right
+	m2m SDOriginalBound.bottom,SDBound.bottom
+	
+	invoke sdSetTargetSprite,TargetSprite
+	
+	ret
+sdStartDrawingOnSprite endp	
+
+
+sdEndDrawingOnSprite proc PUBLIC
+	;-------[ load previous state ]-----[
+	push sdSDOS_Prev_PTS
+	push sdSDOS_Prev_PSS 
+	push sdSDOS_Prev_OBb 
+	push sdSDOS_Prev_OBt 
+	push sdSDOS_Prev_OBr 
+	push sdSDOS_Prev_OBl 
+	push sdSDOS_Prev_DBb 
+	push sdSDOS_Prev_DBt 
+	push sdSDOS_Prev_DBr 
+	push sdSDOS_Prev_DBl 
+	push sdSDOS_Prev_DOy
+	push sdSDOS_Prev_DOx
+	
+	pop SDDrawOffs.x
+	pop SDDrawOffs.y
+	pop SDBound.left
+	pop SDBound.right
+	pop SDBound.top
+	pop SDBound.bottom
+	pop SDOriginalBound.left
+	pop SDOriginalBound.right
+	pop SDOriginalBound.top
+	pop SDOriginalBound.bottom
+	pop pSourceSprite
+	pop pTargetSprite
+	;----------------------------------/
+	invoke sdSetSourceSprite,pSourceSprite
+	invoke sdSetTargetSprite,pTargetSprite
+	ret
+sdEndDrawingOnSprite endp
+
+	
+
+
+sdStart proc PUBLIC UseMost hWnd
+	m2m SDhWnd,hWnd
+	invoke GetDC,hWnd
+	mov SDhDC,eax
+	invoke GetClipBox,SDhDC,addr SDBound
+	.if eax==NULLREGION
+		invoke ReleaseDC,hWnd,SDhDC
+		mov SDhWnd,0
+		mov SDhDC,0
+		xor eax,eax
+		ret
+	.endif
+	
+	m2m SDOriginalBound.left,  SDBound.left
+	m2m SDOriginalBound.top,   SDBound.top
+	m2m SDOriginalBound.right, SDBound.right
+	m2m SDOriginalBound.bottom,SDBound.bottom
+	
+	
+	mov SDDrawOffs.x,0
+	mov SDDrawOffs.y,0
+	
+	invoke sdSetSourceSprite,0
+	invoke sdSetTargetSprite,0
+	
+	mov pClipStack,offset ClipStackData
+	
+	;---[ return 1, clear zero flag ]---[
+	xor eax,eax
+	inc eax
+	ret
+	;-----------------------------------/
+sdStart endp
+
+sdEnd proc PUBLIC UseAll
+	mov eax,SDOriginalBound.right
+	mov edx,SDOriginalBound.bottom
+	sub eax,SDOriginalBound.left
+	sub edx,SDOriginalBound.top
+	
+	invoke BitBlt,SDhDC,SDOriginalBound.left,SDOriginalBound.top,eax,edx,\
+		backDC,SDOriginalBound.left,SDOriginalBound.top,SRCCOPY
+	invoke ReleaseDC,SDhWnd,SDhDC
+	mov SDhWnd,0
+	mov SDhDC,0
+	ret
+sdEnd endp
+
+
+sdStartEx proc PUBLIC UseAll hWnd,dwType
+	m2m SDhWnd,hWnd
+	invoke GetDC,hWnd
+	mov SDhDC,eax
+	;-------------[ get major clipping box ]-------------------------------------[
+	.if dwType==SDSTARTEX_ONUPDATEREGION
+		;---[ if on update-region ]-------------\
+		invoke GetUpdateRect,hWnd,addr SDBound,0
+		.if !eax
+		_sdStartExFailed:
+			invoke ReleaseDC,hWnd,SDhDC
+			mov SDhWnd,0
+			mov SDhDC,0
+			xor eax,eax
+			ret
+		.endif	
+		;---------------------------------------/	
+	.else ;----[ if on draw-region, or custom-region ]------------\
+		invoke GetClipBox,SDhDC,addr SDBound	
+		cmp eax,NULLREGION
+		je _sdStartExFailed
+		;-----------------------------------------------------/
+	.endif
+	;-----------------------------------------------------------------------------/
+	
+	;-------[ intersect if a custom rectangle is specified ]----------------[
+	.if dwType!=SDSTARTEX_ONDRAWREGION && dwType!=SDSTARTEX_ONUPDATEREGION
+		mov edx,dwType
+		;---[ clip horizontal ]--------[
+		mov eax,[edx].RECT.left
+		mov ecx,[edx].RECT.right
+		cmp eax,SDBound.left
+		jge @F
+			mov eax,SDBound.left
+		@@:
+		cmp ecx,SDBound.right
+		jle @F
+			mov ecx,SDBound.right
+		@@:
+		cmp eax,ecx
+		jge _sdStartExFailed
+		mov SDBound.left,eax
+		mov SDBound.right,ecx
+		;------------------------------/
+		;---[ clip vertical ]----------[
+		mov eax,[edx].RECT.top
+		mov ecx,[edx].RECT.bottom
+		cmp eax,SDBound.top
+		jge @F
+			mov eax,SDBound.top
+		@@:
+		cmp ecx,SDBound.bottom
+		jle @F
+			mov ecx,SDBound.bottom
+		@@:
+		cmp eax,ecx
+		jge _sdStartExFailed
+		mov SDBound.top,eax
+		mov SDBound.bottom,ecx
+		;------------------------------/
+			
+	.endif
+	;-----------------------------------------------------------------------/
+	
+	
+	m2m SDOriginalBound.left,  SDBound.left
+	m2m SDOriginalBound.top,   SDBound.top
+	m2m SDOriginalBound.right, SDBound.right
+	m2m SDOriginalBound.bottom,SDBound.bottom
+	
+	
+	mov SDDrawOffs.x,0
+	mov SDDrawOffs.y,0
+	
+	invoke sdSetSourceSprite,0
+	invoke sdSetTargetSprite,0
+	
+	mov pClipStack,offset ClipStackData
+	
+	;---[ return 1, clear zero flag ]---[
+	xor eax,eax
+	inc eax
+	ret
+	;-----------------------------------/
+	ret
+sdStartEx endp
+
+sdEndEx proc PUBLIC UseAll bDoUpdate
+	.if bDoUpdate
+		mov eax,SDOriginalBound.right
+		mov edx,SDOriginalBound.bottom
+		sub eax,SDOriginalBound.left
+		sub edx,SDOriginalBound.top
+		invoke BitBlt,SDhDC,SDOriginalBound.left,SDOriginalBound.top,eax,edx,\
+			backDC,SDOriginalBound.left,SDOriginalBound.top,SRCCOPY
+	.endif
+	
+	invoke ReleaseDC,SDhWnd,SDhDC
+	mov SDhWnd,0
+	mov SDhDC,0
+	ret
+sdEndEx endp
+
+
+sdForceUpdate proc PUBLIC UseAll
+	mov eax,SDBound.right
+	mov edx,SDBound.bottom
+	sub eax,SDBound.left
+	sub edx,SDBound.top
+	
+	invoke BitBlt,SDhDC,SDBound.left,SDBound.top,eax,edx,backDC,SDBound.left,SDBound.top,SRCCOPY
+	ret
+sdForceUpdate endp
+
+sdFetchBackground proc PUBLIC UseAll
+	mov eax,SDOriginalBound.right
+	mov edx,SDOriginalBound.bottom
+	sub eax,SDOriginalBound.left
+	sub edx,SDOriginalBound.top
+	
+	invoke BitBlt,backDC,SDOriginalBound.left,SDOriginalBound.top,eax,edx,\
+		SDhDC,SDOriginalBound.left,SDOriginalBound.top,SRCCOPY
+	ret
+sdFetchBackground endp
+

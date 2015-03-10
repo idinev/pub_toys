@@ -1,0 +1,346 @@
+
+;=====<< SdLoadFont >>===\
+SFontStruct struct
+	wid	dd ?
+	hei	dd ?
+	isMono	dd ?
+	ChPoss	dw 96 dup (?)
+	ChWids	db 96 dup (?)
+	
+	bits 	db 0 dup (?)
+SFontStruct ends
+
+
+sdLoadFont proc PUBLIC UseMost pFontData
+	local pFont
+	mov ecx,pFontData
+	.if dword ptr[ecx]!='SDFT'
+		xor eax,eax
+		ret
+	.endif
+	mov pFont,malloc(dword ptr[ecx+8])
+	invoke unpack,addr [ecx+12],pFont,dword ptr[ecx+4]
+	
+	mov eax,pFont
+	ret
+sdLoadFont endp
+;=======/
+
+
+
+;=====[[ tool: sTextOUTGetDrawnSize >>===\
+
+sTextOUTGetDrawnSize proc PUBLIC uses ecx edx pText
+	local maxwid,y
+	local LineHei
+	
+	
+	xor eax,eax
+	mov ebx,pText
+	mov maxwid,eax
+	or ebx,ebx
+	jz _ret
+	
+	mov ecx,SD_CurFont
+	mov edx,[ecx].SFontStruct.hei
+	mov LineHei,edx
+	mov y,edx
+	
+	lea ecx,[ecx].SFontStruct.ChWids
+	
+	
+	
+ _again:
+	movzx edx,byte ptr[ebx]
+	inc ebx
+	test edx,edx
+	jz _ret
+	.if edx>=32 && edx<128 ; drawable char
+		sub edx,32
+		movzx edx,byte ptr[ecx+edx]
+		add eax,edx
+		jmp _again
+	.elseif edx==10
+		.if eax>maxwid
+			mov maxwid,eax
+		.endif
+		mov edx,LineHei
+		add y,edx
+		xor eax,eax
+	.endif
+	jmp _again
+	
+	
+_ret:	
+	.if maxwid>eax
+		mov eax,maxwid
+	.endif
+	mov ebx,y
+	ret
+sTextOUTGetDrawnSize endp
+;=======/
+sTextPrintLine proc PRIVATE x,y,wid,hei,pText ; x,y,wid,hei are NOT random!
+	
+	ret
+sTextPrintLine endp
+
+
+
+sTextOut proc PUBLIC UseAll x,y,pText,dwColor
+	local wid,hei
+	local defaultX,LineDataSize,FontHei,FontWid
+	local CharOffs,CharWid,IsMonochrome
+	local esi2,edi2
+	local dwColorG,dwColorRB
+	
+	cmp pText,0
+	je _ret
+	
+	;-----[ try to clip early ]----------[
+	mov eax,x
+	mov edx,y
+	add eax,SDDrawOffs.x
+	add edx,SDDrawOffs.y
+	cmp eax,SDBound.right
+	jge _ret
+	cmp edx,SDBound.bottom
+	jge _ret
+	mov x,eax
+	mov defaultX,eax
+	mov y,edx
+	
+	invoke sTextOUTGetDrawnSize,pText
+	mov wid,eax
+	mov hei,ebx
+	add eax,x
+	add ebx,y
+	cmp eax,SDBound.left
+	jle _ret
+	cmp ebx,SDBound.top
+	jle _ret
+	;------------------------------------/
+	
+	;----[ preload data+registers ]-----[
+	mov ebx,pText
+	mov ecx,SD_CurFont
+	mov edx,[ecx].SFontStruct.wid
+	mov FontWid,edx
+	mov edx,[ecx].SFontStruct.isMono
+	mov IsMonochrome,edx
+	mov edx,[ecx].SFontStruct.hei
+	mov FontHei,edx
+	imul edx,sTarget_Data.linesize
+	mov LineDataSize,edx
+	mov eax,sTarget_Data.wid
+	imul eax,y
+	mov edi,sTarget_Data.bits
+	lea esi,[ecx].SFontStruct.bits
+	lea edi,[edi+eax*4]	
+	lea edx,[ecx].SFontStruct.ChWids
+	lea ecx,[ecx].SFontStruct.ChPoss
+	mov esi2,esi
+	mov edi2,edi
+	
+	mov eax,dwColor
+	and eax,000FF00h
+	mov dwColorG,eax
+	mov eax,dwColor
+	and eax,0FF00FFh
+	mov dwColorRB,eax
+	;-----------------------------------/
+	
+	;------[ for each char ]-------------\
+	_nextChar:
+	
+	movzx eax,byte ptr[ebx]
+	inc ebx
+	test eax,eax
+	jz _ret
+	.if al==10 ; on newline
+		mov eax,FontHei
+		add y,eax
+		mov eax,defaultX
+		mov x,eax
+		mov eax,LineDataSize
+		sub edi2,eax
+		jmp _nextChar
+	.endif
+		
+	.if eax>=32 && eax<128 ; drawable char
+		sub eax,32
+		pushi ebx,ecx,edx
+		movzx ecx,word ptr[ecx+eax*2] ; ecx=char-offset
+		movzx edx,byte ptr[edx+eax]   ; edx=char-width
+		mov CharOffs,ecx
+		mov CharWid,edx
+		mov eax,x ; eax=left
+		add x,edx			; increase target x with char width
+		mov ebx,edx
+		add ebx,eax; ebx= right
+		mov ecx,y	; ecx=top
+		mov edx,FontHei
+		add edx,ecx	; edx=bottom	
+		cmp eax,SDBound.right
+		jge _charDone
+		cmp ebx,SDBound.left
+		jle _charDone
+		cmp ecx,SDBound.bottom
+		jge _charDone
+		cmp edx,SDBound.top
+		jle _charDone
+		.if sdword ptr edx>SDBound.bottom
+			mov edx,SDBound.bottom
+		.endif
+		.if sdword ptr ebx>SDBound.right
+			mov ebx,SDBound.right
+		.endif
+		
+		mov esi,esi2
+		mov edi,edi2
+		add esi,CharOffs
+		lea edi,[edi+eax*4]
+		
+		
+		.if IsMonochrome
+			;-----------[ for each scanline ]-----------[
+			_nextHScan:
+			    .if sdword ptr ecx>=SDBound.top
+				pushi eax,esi,edi
+					;--[ for each h-pixel ]---[
+					_nextpix:
+						.if sdword ptr eax>=SDBound.left
+							;------[ finally, fill the pixel ]------------[
+							.if byte ptr[esi]
+								m2m dword ptr[edi],dwColor
+							.endif
+							;---------------------------------------------/				
+						.endif				
+					inc eax
+					add edi,4
+					inc esi
+					cmp eax,ebx
+					jl _nextpix
+					;-------------------------/
+				poppi eax,esi,edi
+			    .endif
+			inc ecx
+			add edi,sTarget_Data.linesize
+			add esi,FontWid
+			cmp ecx,edx
+			jl _nextHScan
+			;--------------------------------------------/	
+		.else
+			;-----------[ for each scanline ]-----------[
+			_nextHScan2:
+			    .if sdword ptr ecx>=SDBound.top
+				pushi eax,ecx,edx,esi,edi
+					;--[ for each h-pixel ]---[
+					_nextpix2:
+						.if sdword ptr eax>= sdword ptr SDBound.left
+							;------[ finally, fill the pixel ]------------[
+							pushi eax,ebx
+							movzx eax,byte ptr[esi]
+							mov ecx,[edi]
+							
+							;-----[ get alpha ]-----[
+							mov ebx,256
+							sub ebx,eax
+							; eax = Alpha
+							; ebx = invAlpha
+							;-----------------------/
+							
+							
+							mov edx,ecx
+							
+							and ecx,0FF00FFh
+							and edx,000FF00h
+							imul ecx,ebx
+							imul edx,ebx
+							mov ebx,eax
+							imul eax,dwColorRB
+							imul ebx,dwColorG
+							add eax,ecx
+							add ebx,edx
+							and eax,0FF00FF00h
+							and ebx,000FF0000h
+							add eax,ebx
+							shr eax,8
+							mov [edi],eax
+							
+							poppi eax,ebx
+							;---------------------------------------------/				
+						.endif				
+					inc eax
+					add edi,4
+					inc esi
+					cmp eax,ebx
+					jl _nextpix2
+					;-------------------------/
+				poppi eax,ecx,edx,esi,edi
+			    .endif
+			inc ecx
+			add edi,sTarget_Data.linesize
+			add esi,FontWid
+			cmp ecx,edx
+			jl _nextHScan2
+			;--------------------------------------------/	
+		.endif
+				
+		
+		
+		_charDone:
+		;add x,1 ; move target x right, for char spacing
+		poppi ebx,ecx,edx
+	.endif
+	jmp _nextChar
+	;------------------------------------/
+	
+	
+	
+	
+	
+_ret:	ret
+sTextOut endp
+
+
+
+;=====[[ sdPrintDec >>===\
+sdPrintDec proc PUBLIC UseAll x,y,Value,dwColor
+	local digits[64]:byte
+	local str1[64]:byte
+	
+	lea edi,str1
+	mov eax,Value
+	cmp eax,0
+	jge @F
+		neg eax
+		mov byte ptr[edi],'-'
+		inc edi
+	@@:
+	
+	mov ecx,10
+	xor ebx,ebx
+	
+	@@:
+	xor edx,edx
+	div ecx
+	add dl,'0'
+	mov digits[ebx],dl
+	inc ebx
+	or eax,eax
+	jnz @B
+	
+	.while ebx
+		dec ebx
+		mov al,digits[ebx]
+		mov [edi],al
+		inc edi
+	.endw
+	mov byte ptr[edi],0
+	
+	
+	invoke sTextOut,x,y,addr str1,dwColor
+		
+	ret
+sdPrintDec endp
+;=======/

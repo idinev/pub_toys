@@ -1,0 +1,32 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdLeaveClip</h1>
+<p><span style="font-weight: bold;">sdLeaveClip</span> restores the clipper to the state it was in just before sdEnterClip()</p>
+<BR>
+<p>void sdLeaveClip();</p>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+<h4>Remarks</h4>
+<p>
+Must match every sdEnterClip with a sdLeaveClip, otherwise a GPF (crash) is underway. sDraw manages its own stack of clippers. 
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sdEnterClip.html">sdEnterClip</a>,
+<a href="sdForceClip.html">sdForceClip</a>
+</p>
+</body>
+</html>

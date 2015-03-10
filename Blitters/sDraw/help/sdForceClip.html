@@ -1,0 +1,79 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdForceClip</h1>
+<p><font color=red><i>Advanced access only</i></font></p>
+<p><span style="font-weight: bold;">sdForceClip</span> forces the clip to 0:0-wid:hei . sdForceClip should be used only in advanced operations.</p>
+<BR>
+<p>void sdForceClip(long wid,long hei);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>wid,hei</b></dt>
+  <dd>size of the forced clip-rectangle</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>
+<pre>
+	if(!pCachedGraph) pCachedGraph = sdCreateBlankSprite(400,300);
+	
+	if(CachedGraph_NeedsUpdate){
+		sdEnterClip(0,0,0,0); // force push of clipper (save its state)
+		sdForceClip(400,300);
+		sdSetTargetSprite(pCachedGraph);
+		//----[ draw onto pCachedGraph ]-----------------------------[
+		sDrawRect(0,0,400,300,0xFF);// fill pCachedGraph with blue
+		[[.. Usually a very complex graphic should be drawn here ]]
+		//-----------------------------------------------------------/
+		sdSetTargetSprite(0); // revert to drawing on the back-buffer
+		sdLeaveClip(); // force pop of clipper (restore its previous state)
+	}
+	
+	sdSetSourceSprite(pCachedGraph);
+	sBlt(0,0,400,300,0,0); // copy pCachedGraph onto back-buffer
+</pre>
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+sdForceClip(wid,hei) is equal to
+<pre>
+	//extern RECT  SDBound; // current bounding rectangle. For experts' use
+	//extern POINT SDDrawOffs; // current draw-offset. For experts' use
+	
+	SDDrawOffs.x = 0;
+	SDDrawOffs.y = 0;
+	SDBound.left = 0;
+	SDBound.top  = 0;
+	SDBound.right = wid;
+	SDBound.bottom= hei;
+</pre>
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sdEnterClip.html">sdEnterClip</a>,
+<a href="sdLeaveClip.html">sdLeaveClip</a>
+</p>
+</body>
+</html>

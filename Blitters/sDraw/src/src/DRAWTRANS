@@ -1,0 +1,107 @@
+sBltTrans proc PUBLIC UseAll x,y,wid,hei,x2,y2
+	local Alpha,invAlpha,wid2
+	invoke FixupSBLTparams,addr x
+	jz _ret
+	
+	COMPUTEBLTBITS3
+	
+	sub esi,4
+	sub edi,4
+	mov ebx,SD_TransparentColor
+	
+	nextline:
+		mov ecx,wid
+		align 16
+		@@:
+			mov eax,[esi+ecx*4]
+			and eax,0FFFFFFh
+			.if eax!=ebx
+				mov [edi+ecx*4],eax
+			.endif
+		dec ecx
+		jnz @B
+		
+		add esi,sSource_Data.linesize
+		add edi,sTarget_Data.linesize
+		dec hei
+	jnz nextline
+	
+		
+	
+_ret:	ret
+sBltTrans endp
+
+
+sBltTransAlpha proc PUBLIC UseAll x,y,wid,hei,x2,y2,Alpha
+	local extraDest,extraSrc
+	local wid2,invAlpha,Alpha2
+	;---[ check alpha ]--------------------[
+	cmp Alpha,0
+	jle _ret
+	.if Alpha>255
+		invoke sBltTrans,x,y,wid,hei,x2,y2
+		jmp _ret
+	.endif
+	;--------------------------------------/
+	
+	invoke FixupSBLTparams,addr x
+	jz _ret
+	
+	COMPUTEBLTBITS2
+	
+	
+		
+	    mov eax,256
+	    sub eax,Alpha
+	    mov invAlpha,eax
+	    @@:
+		m2m wid2,wid
+		align 16
+		_nextpix:
+		mov eax,[esi]
+		mov ecx,[edi]
+		mov ebx,eax
+		xor eax,SD_TransparentColor
+		mov edx,ecx
+		shl eax,8
+		jz skippix
+		mov eax,ebx
+		and eax,0FF00FFh
+		and ecx,0FF00FFh
+		and ebx,000FF00h
+		and edx,000FF00h
+		imul eax,Alpha
+		imul ecx,invAlpha
+		imul ebx,Alpha
+		imul edx,invAlpha
+		add eax,ecx
+		add ebx,edx
+		and eax,0FF00FF00h
+		and ebx,000FF0000h
+		add eax,ebx
+		shr eax,8
+		mov [edi],eax
+		
+		
+		
+		; out = (dcolor*(256-alpha) + color*alpha)/256 = 
+		;  dcolor*256 - dcolor*alpha + color*alpha = dcolor*256 + alpha*(color-dcolor)
+		
+		skippix:
+		
+		
+		
+		add esi,4
+		add edi,4
+		dec wid2
+		jnz _nextpix
+		
+		add esi,extraSrc
+		add edi,extraDest
+		dec hei
+	    jnz @B
+	
+	
+_ret:	ret
+sBltTransAlpha endp
+

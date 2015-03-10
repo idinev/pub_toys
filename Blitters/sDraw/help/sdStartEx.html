@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdStartEx</h1>
+<p><span style="font-weight: bold;">sdStart</span>Ex starts drawing on
+the current window's client area. </p>
+<br>
+<p>bool sdStartEx(HWND hWnd,long dwType);</p>
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>hWnd</b></dt>
+  <dd>Handle of the window to start drawing on</dd>
+  <dt> <span style="font-weight: bold;">dwType</span><br>
+  </dt>
+  <dd>One of three values: <br>
+  </dd>
+  <dl style="margin-left: 40px;">
+    <li>a) SDSTARTEX_ONUPDATEREGION - draws only on the update-region
+rectangle.</li>
+    <li>b) SDSTARTEX_ONDRAWREGION - draws to the whole window (default
+behaviour of sdStart() )<br>
+    </li>
+    <li>c) pointer to a RECT structure - draws only to the specified
+rectangle of the window. <br>
+    </li>
+  </dl>
+</dl>
+<h4>Return Value</h4>
+<p><b>true</b> - success<br>
+<b>false</b> - failed to start drawing, since the window is not
+visible. <b>Must not continue</b> drawing on it now. <br>
+[ASM: zero flag is set if failed]
+</p>
+<br>
+<h4>Remarks</h4>
+<p>
+Must end with <b>sdEnd</b>() if sdStartEx() is successful. <br>
+</p>
+<h4>See Also</h4>
+<p>
+<a href="sdEnd.html">sdEnd</a>,
+<a href="sdStart.html">sdStart</a>,
+<a href="sdEnterClip.html">sdEnterClip</a>,
+<a href="sdSetSourceSprite.html">sdSetSourceSprite</a>
+</p>
+</body>
+</html>

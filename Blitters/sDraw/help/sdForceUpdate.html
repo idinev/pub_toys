@@ -1,0 +1,55 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdForceUpdate</h1>
+<p><font color=red><i>Intermeddiate access only</i></font></p>
+<p><span style="font-weight: bold;">sdForceUpdate</span> updates immediately the current clip-area of the currently drawn window onto screen, you can continue drawing on the window immediately afterwards. Still, you have to use sdEnd at the end of drawing of the window.</p>
+<BR>
+<p>void sdForceUpdate();</p>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>
+<pre>
+void DrawWindow(HWND hWnd){
+	if(!sdStart(hWnd))return; // must return
+	sDrawRect(0,0,2000,2000,0xFF0000); //fill with red
+	sdEnterClip(50,65,100,70);
+	sDrawRect(0,0,100,70,0xFF); // fill with blue
+	sdForceUpdate();
+	sdLeaveClip();
+	//----[ do some time-taking drawing ]---------[
+	.....
+	//--------------------------------------------/
+	sdEnd();
+}
+</pre>
+Here, the blue 100x70 will be immediately shown, and later - at sdEnd, the whole window will be updated. (btw, this rectangle's top-left corner will be 50:65, due to sdEnterClip).
+</p>
+
+<h4>Remarks</h4>
+<p>
+sdForceUpdate should be used to quickly update an area that won't be drawn on anymore, before time-taking drawing batch of operations. <BR>
+sdForceUpdate is <I>always</i> used together with sdEnterClip and sdLeaveClip (otherwise it loses its purpose).
+</p>
+
+<h4>See Also</h4>
+<p>
+<a href="sdStart.html">sdStart</a>,
+<a href="sdEnd.html">sdEnd</a>,
+<a href="sdEnterClip.html">sdEnterClip</a>,
+<a href="sdLeaveClip.html">sdLeaveClip</a>
+</p>
+</body>
+</html>

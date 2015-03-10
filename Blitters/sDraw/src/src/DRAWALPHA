@@ -1,0 +1,311 @@
+
+;=====<< sBltAlpha >>===\
+sBltAlpha proc PUBLIC UseAll x,y,wid,hei,x2,y2,Alpha
+	local extraDest,extraSrc
+	local wid2,invAlpha,Alpha2
+	;---[ check alpha ]--------------------[
+	cmp Alpha,0
+	jle _ret
+	.if Alpha>255
+		invoke sBlt,x,y,wid,hei,x2,y2
+		jmp _ret
+	.endif
+	;--------------------------------------/
+	
+	invoke FixupSBLTparams,addr x
+	jz _ret
+	
+	COMPUTEBLTBITS2
+	
+	
+		
+	.if !(sSource_Data.dwFlags & SDRAWSPRITE_HASALPHA)
+	    mov eax,256
+	    sub eax,Alpha
+	    mov invAlpha,eax
+	    @@:
+		m2m wid2,wid
+		align 16
+		_nextpix:
+		mov eax,[esi]
+		mov ecx,[edi]
+		mov ebx,eax
+		mov edx,ecx
+		and eax,0FF00FFh
+		and ecx,0FF00FFh
+		and ebx,000FF00h
+		and edx,000FF00h
+		imul eax,Alpha
+		imul ecx,invAlpha
+		imul ebx,Alpha
+		imul edx,invAlpha
+		add eax,ecx
+		add ebx,edx
+		and eax,0FF00FF00h
+		and ebx,000FF0000h
+		add eax,ebx
+		shr eax,8
+		mov [edi],eax
+		
+		
+		
+		; out = (dcolor*(256-alpha) + color*alpha)/256 = 
+		;  dcolor*256 - dcolor*alpha + color*alpha = dcolor*256 + alpha*(color-dcolor)
+		
+		
+		
+		
+		add esi,4
+		add edi,4
+		dec wid2
+		jnz _nextpix
+		
+		add esi,extraSrc
+		add edi,extraDest
+		dec hei
+	    jnz @B
+	.else
+		;-----[ draw a bitmap that has alpha-channel ]-------[
+		@@:
+		m2m wid2,wid
+		align 16
+			_nextpix2:
+			mov eax,[esi]
+			mov ecx,[edi]
+			;-----[ get alpha ]-----[
+			mov edx,256
+			mov ebx,eax
+			shr ebx,24
+			jz _zeroalpha2
+			imul ebx,Alpha
+			shr ebx,8
+			jz _zeroalpha2
+			sub edx,ebx
+			mov Alpha2,ebx
+			mov invAlpha,edx
+			;-----------------------/
+			
+			mov ebx,eax
+			mov edx,ecx
+			
+			and eax,0FF00FFh
+			and ecx,0FF00FFh
+			and ebx,000FF00h
+			and edx,000FF00h
+			imul eax,Alpha2
+			imul ecx,invAlpha
+			imul ebx,Alpha2
+			imul edx,invAlpha
+			add eax,ecx
+			add ebx,edx
+			and eax,0FF00FF00h
+			and ebx,000FF0000h
+			or eax,ebx
+			shr eax,8
+			mov [edi],eax
+						
+			
+			_zeroalpha2:
+			
+			
+			
+			add esi,4
+			add edi,4
+			dec wid2
+			jnz _nextpix2
+			
+			add esi,extraSrc
+			add edi,extraDest
+			dec hei
+		jnz @B
+		ret
+		;----------------------------------------------------/
+	    
+	.endif
+
+	
+_ret:	ret
+sBltAlpha endp
+
+;=======/
+
+
+
+sDrawRectAlpha proc PUBLIC UseAll x,y,wid,hei,dwColor,Alpha	
+	
+	;----[ check params ]------------------------[
+	cmp Alpha,0
+	jle _ret
+	.if Alpha>255
+		invoke sDrawRect,x,y,wid,hei,dwColor
+		jmp _ret
+	.endif
+	;--------------------------------------------/
+	
+	CHECKDRAWRECT
+	COMPUTEBLTBITS1
+	
+	
+	;---[ premultiply dwColor ]---[
+	mov eax,dwColor
+	mov ebx,eax
+	and eax,0FF00FFh
+	and ebx,000FF00h
+	imul eax,Alpha
+	imul ebx,Alpha
+	and eax,0FF00FF00h
+	and ebx,000FF0000h
+	or eax,ebx
+	shr eax,8
+	mov dwColor,eax
+	;-----------------------------/
+	
+	sub edi,4
+	mov ebx,256
+	sub ebx,Alpha ; ebx = invAlpha
+	
+	
+	
+	.if Alpha!=128
+		
+		nextline:
+			mov ecx,wid
+			align 16
+			@@:
+				mov eax,[edi+ecx*4]
+				mov edx,eax
+				and eax,0FF00FFh
+				and edx,000FF00h
+				imul eax,ebx
+				imul edx,ebx
+				and eax,0FF00FF00h
+				and edx,000FF0000h
+				or eax,edx
+				shr eax,8
+				add eax,dwColor
+				mov [edi+ecx*4],eax
+			dec ecx
+			jnz @B
+			
+			add edi,sTarget_Data.linesize
+			dec hei
+		jnz nextline
+		ret
+	.else	; Alpha=128
+		
+		mov edx,dwColor
+		mov ebx,7F7F7Fh
+		
+		nextline2:
+			mov ecx,wid
+			align 16
+			@@:
+				mov eax,[edi+ecx*4]
+				shr eax,1
+				and eax,ebx
+				add eax,edx
+				mov [edi+ecx*4],eax
+			dec ecx
+			jnz @B
+			
+			add edi,sTarget_Data.linesize
+			dec hei
+		jnz nextline2
+		
+	.endif	
+	
+_ret:	ret
+sDrawRectAlpha endp
+
+
+
+sDrawLineH_HalfAlpha proc PUBLIC uses eax edx ecx edi x,y,wid,dwColor
+	mov ecx,x
+	mov edi,y
+	mov eax,wid
+	add ecx,SDDrawOffs.x
+	add edi,SDDrawOffs.y
+	add eax,ecx
+	cmp edi,SDBound.top
+	jl _ret	
+	cmp edi,SDBound.bottom
+	jge _ret
+	
+	cmp ecx,SDBound.left
+	jge @F
+		mov ecx,SDBound.left
+	@@:
+	cmp eax,SDBound.right
+	jle @F
+		mov eax,SDBound.right
+	@@:
+	sub eax,ecx
+	jle _ret
+	imul edi,sTarget_Data.linesize
+	shl ecx,2
+	add edi,sTarget_Data.bits
+	add edi,ecx
+	sub edi,4
+	mov ecx,dwColor
+	and ecx,0FEFEFEh
+	
+	
+	align 16
+	@@:
+		mov edx,[edi+eax*4]
+		and edx,0FEFEFEh
+		add edx,ecx
+		shr edx,1
+		mov [edi+eax*4],edx
+	dec eax
+	jnz @B
+	ret
+		
+_ret:	ret
+sDrawLineH_HalfAlpha endp
+
+
+sDrawLineV_HalfAlpha proc PUBLIC uses eax edx ecx edi x,y,hei,dwColor
+	mov ecx,x
+	mov edi,y
+	mov eax,hei
+	add ecx,SDDrawOffs.x
+	add edi,SDDrawOffs.y
+	add eax,edi
+	
+	cmp ecx,SDBound.left
+	jl _ret
+	cmp ecx,SDBound.right
+	jge _ret
+	
+	cmp edi,SDBound.top
+	jge @F
+		mov edi,SDBound.top
+	@@:
+	cmp eax,SDBound.bottom
+	jle @F
+		mov eax,SDBound.bottom
+	@@:
+	sub eax,edi
+	jle _ret
+	
+	imul edi,sTarget_Data.linesize
+	shl ecx,2
+	add edi,sTarget_Data.bits
+	add edi,ecx
+	mov ecx,dwColor
+	and ecx,0FEFEFEh
+	
+	align 16
+	@@:
+		mov edx,[edi]
+		and edx,0FEFEFEh
+		add edx,ecx
+		shr edx,1
+		mov [edi],edx
+		add edi,sTarget_Data.linesize
+	dec eax
+	jnz @B
+	
+_ret:	ret
+sDrawLineV_HalfAlpha endp

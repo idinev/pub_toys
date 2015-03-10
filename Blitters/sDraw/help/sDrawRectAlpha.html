@@ -1,0 +1,54 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sDrawRectAlpha</h1>
+<p><span style="font-weight: bold;">sDrawRectAlpha</span> draws a transparent rectangle with the specified dwColor and opacity (Alpha).</p>
+<BR>
+<p>void sDrawRectAlpha(long x,long y,long wid,long hei,long dwColor,long Alpha);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>x,y,wid,hei</b></dt>
+  <dd>rectangle position and size</dd>
+  <dt> <b>dwColor</b></dt>
+  <dd>color to use for drawing</dd>
+  <dt> <b>Alpha</b></dt>
+  <dd>0..256. opacity of drawing</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>
+sDrawRectAlpha(0,0,400,300,0xFFFFFF,68);// white 400x300 rectangle at position 0:0, opacity 68
+</p>
+
+<h4>Remarks</h4>
+<p>
+if Alpha=128, the blend is 4 times faster.
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sDrawRect.html">sDrawRect</a>,
+<a href="sDrawRectROP.html">sDrawRectROP</a>,
+<a href="sDrawRectAddFade.html">sDrawRectAddFade</a>
+</p>
+</body>
+</html>

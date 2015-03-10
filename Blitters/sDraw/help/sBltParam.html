@@ -1,0 +1,51 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sBlt***Param procedures</h1>
+<p><span style="font-weight: bold;">sBlt***Param</span> switch the <B>source sSprite</b> to the sSprite, given in the <B>additional "pSprite" parameter</b>, call the sBlt*** function, and <B>restore</b> to the previous source-sSprite.
+Switching between textures is a bit slow (16-50 cycles per switch), and relatively rare, thus in sDraw it's brought to minimum. <BR>
+But in cases when we need to Blt from some other sSprite, and revert to the previous source-sSprite, sBlt***Param are mostly convenient. 
+</p>
+<BR>
+<p>
+<B>List of sBlt***Param procedures:</b><BR>
+void  sBltParam(long x,long y,long wid,long hei,long x2,long y2,sSprite* pSprite);<BR>
+void  sBltTransParam(long x,long y,long wid,long hei,long x2,long y2,sSprite* pSprite);<BR>
+void  sBltTransAlphaParam(long x,long y,long wid,long hei,long x2,long y2,long Alpha,sSprite* pSprite);<BR>
+void  sBltAlphaParam(long x,long y,long wid,long hei,long x2,long y2,long Alpha,sSprite* pSprite);<BR>
+void  sBltAddParam(long x,long y,long wid,long hei,long x2,long y2,sSprite* pSprite);<BR>
+void  sBltAddFadeParam(long x,long y,long wid,long hei,long x2,long y2,long Fader,sSprite* pSprite);<BR>
+void  sBltTintParam(long x,long y,long wid,long hei,long x2,long y2,long dwColor,sSprite* pSprite);<BR>
+
+</p>
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>sBltParam(0,0,400,300,0,0,pBackgroundSprite);<BR><BR>
+sBltAddFadeParam(0,0,400,300,0,0, 166, pLightSprite);
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+Total overhead per call is 40-120 cycles. When several consequent sBlt*** calls, that use the same sSprite, are present in your code, you should use 
+<a href="sdSetSourceSprite.html">sdSetSourceSprite</a>. 
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sBlt.html">sBlt</a>,
+<a href="sdSetSourceSprite.html">sdSetSourceSprite</a>
+</p>
+</body>
+</html>

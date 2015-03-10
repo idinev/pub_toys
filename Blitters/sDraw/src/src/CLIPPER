@@ -1,0 +1,470 @@
+
+;=====[[ some_Macros >>===\
+MAKERECT macro Rect1,x,y,wid,hei
+	mov eax,x
+	mov Rect1.left,eax
+	add eax,wid
+	mov Rect1.right,eax
+	mov eax,y
+	mov Rect1.top,eax
+	add eax,hei
+	mov Rect1.bottom,eax
+endm
+
+CHECKDRAWRECT macro
+	
+	mov eax,x
+	mov ebx,y
+	mov ecx,wid
+	mov edx,hei
+	add eax,SDDrawOffs.x
+	add ebx,SDDrawOffs.y
+	add ecx,eax
+	add edx,ebx
+	
+	cmp eax,SDBound.left
+	jge @F
+		mov eax,SDBound.left
+	@@:
+	cmp ebx,SDBound.top
+	jge @F
+		mov ebx,SDBound.top
+	@@:
+	
+	cmp ecx,SDBound.right
+	jle @F
+		mov ecx,SDBound.right
+	@@:
+	
+	cmp edx,SDBound.bottom
+	jle @F
+		mov edx,SDBound.bottom
+	@@:
+	
+	sub ecx,eax
+	jle _ret
+	sub edx,ebx
+	jle _ret
+	mov x,eax
+	mov y,ebx
+	mov wid,ecx
+	mov hei,edx
+endm
+
+CLIPRECTADJUST macro Rect,ClipRect,ptX,ptY
+	;----[ clip left,top ]---------[
+	mov eax,ClipRect.left
+	sub eax,Rect.left
+	jle @F
+		add Rect.left,eax
+		add ptX,eax
+	@@:
+	
+	mov eax,ClipRect.top
+	sub eax,Rect.top
+	jle @F
+		add Rect.top,eax
+		add ptY,eax
+	@@:
+	;---------------------------------/
+	
+	;-----[ clip right,bottom ]----------[
+	mov eax,ClipRect.right
+	cmp eax,Rect.right
+	jge @F
+		mov Rect.right,eax
+	@@:
+	mov eax,ClipRect.bottom
+	cmp eax,Rect.bottom
+	jge @F
+		mov Rect.bottom,eax
+	@@:
+	;------------------------------------/
+endm
+
+COMPUTEBLTBITS macro
+	;---[ compute pBits ]--------------[
+	mov eax,y
+	mov edi,x
+	shl edi,2
+	imul eax,sTarget_Data.linesize
+	add edi,eax
+	add edi,sTarget_Data.bits
+	;----------------------------------/
+	;-[ compute extraDest ]---[
+	mov eax,sTarget_Data.wid
+	sub eax,wid
+	shl eax,2
+	mov extraDest,eax
+	;-------------------------/
+endm
+
+COMPUTEBLTBITS1 macro
+	;---[ compute pBits ]--------------[
+	mov eax,y
+	mov edi,x
+	shl edi,2
+	imul eax,sTarget_Data.linesize
+	add edi,eax
+	add edi,sTarget_Data.bits
+	;----------------------------------/
+endm
+
+COMPUTEBLTBITS2 macro
+	;---[ compute pBits ]--------------[
+	mov eax,y
+	mov edi,x
+	shl edi,2
+	imul eax,sTarget_Data.linesize
+	add edi,eax
+	add edi,sTarget_Data.bits
+	;----------------------------------/
+	
+	;---[ compute pBits2 ]--------------[
+	mov eax,y2
+	mov esi,x2
+	shl esi,2
+	imul eax,sSource_Data.linesize
+	add esi,eax
+	add esi,sSource_Data.bits
+	;-----------------------------------/
+	
+	;--[ compute extraDest,extraSrc ]--[
+	mov eax,sTarget_Data.wid
+	sub eax,wid
+	shl eax,2
+	mov extraDest,eax
+	mov eax,sSource_Data.wid
+	sub eax,wid
+	shl eax,2
+	mov extraSrc,eax
+	;----------------------------------/
+	
+endm
+
+COMPUTEBLTBITS3 macro
+	;---[ compute pBits ]--------------[
+	mov eax,y
+	mov edi,x
+	shl edi,2
+	imul eax,sTarget_Data.linesize
+	add edi,eax
+	add edi,sTarget_Data.bits
+	;----------------------------------/
+	
+	;---[ compute pBits2 ]--------------[
+	mov eax,y2
+	mov esi,x2
+	shl esi,2
+	imul eax,sSource_Data.linesize
+	add esi,eax
+	add esi,sSource_Data.bits
+	;-----------------------------------/
+endm
+
+
+
+;=======/
+;=====<< RectTools >>===\
+MakeRect proc uses eax ecx pOutRect,x,y,wid,hei
+	mov ecx,pOutRect
+	MAKERECT [ecx].RECT,x,y,wid,hei
+	ret
+MakeRect endp
+
+;=======/
+;=====<< FixupSBLTparams >>===\
+;
+; Called in sdBlt,sdBltTrans,sdBltAlpha, and the like
+; Fixes-up the "x,y,wid,hei,x2,y2" params right into 
+; the stack, ZeroFlag is set if we needn't draw
+;
+
+FixupSBLTparams proc pX
+	local Dest:SRECT,BRec:SRECT
+	assume ecx:ptr SBLTPARAM
+	
+	mov ecx,pX
+	mov eax,SDDrawOffs.x
+	add [ecx].x,eax
+	mov eax,SDDrawOffs.y
+	add [ecx].y,eax
+	
+	MAKERECT Dest,[ecx].x,[ecx].y,[ecx].wid,[ecx].hei
+	CLIPRECTADJUST Dest,SDBound,[ecx].x2,[ecx].y2
+	
+	mov eax,Dest.right
+	sub eax,Dest.left
+	jle _ret
+	mov [ecx].wid,eax
+	
+	mov eax,Dest.bottom
+	sub eax,Dest.top
+	jle _ret
+	mov [ecx].hei,eax
+	
+	mov eax,Dest.left
+	mov [ecx].x,eax
+	mov eax,Dest.top
+	mov [ecx].y,eax
+	
+	
+	assume ecx:nothing
+_done:	
+	xor eax,eax
+	inc eax
+	ret
+	
+_ret:	; failed
+	xor eax,eax
+	ret	
+FixupSBLTparams endp	
+;=======/
+
+
+;=====[[ sdEnter/Leave/ForceClip >>===\
+.data?
+	pClipStack	dd ?
+	ClipStackData	db 24*40 dup (?)
+	
+.code	
+	; clipper size = 24 bytes
+	
+
+sdLeaveClip proc PUBLIC uses eax
+	sub pClipStack,24
+	mov eax,pClipStack
+	
+	push dword ptr[eax+ 0]
+	push dword ptr[eax+ 4]
+	push dword ptr[eax+ 8]
+	push dword ptr[eax+12]
+	push dword ptr[eax+16]
+	push dword ptr[eax+20]
+	
+	pop SDBound.left
+	pop SDBound.top
+	pop SDBound.right
+	pop SDBound.bottom
+	pop SDDrawOffs.x
+	pop SDDrawOffs.y
+	
+	ret
+sdLeaveClip endp
+
+sdEnterClip proc PUBLIC uses eax ebx ecx edx x,y,wid,hei
+		
+	;-----[ push clipper ]---------------[
+	mov eax,pClipStack
+	push SDBound.left
+	push SDBound.top
+	push SDBound.right
+	push SDBound.bottom
+	push SDDrawOffs.x
+	push SDDrawOffs.y
+	
+	pop dword ptr[eax+ 0]
+	pop dword ptr[eax+ 4]
+	pop dword ptr[eax+ 8]
+	pop dword ptr[eax+12]
+	pop dword ptr[eax+16]
+	pop dword ptr[eax+20]
+	
+	add pClipStack,24
+	;------------------------------------/
+		
+	mov eax,x
+	mov ebx,y
+	mov ecx,wid
+	mov edx,hei
+	add eax,SDDrawOffs.x
+	add ebx,SDDrawOffs.y
+	mov SDDrawOffs.x,eax
+	mov SDDrawOffs.y,ebx
+	add ecx,eax
+	add edx,ebx
+	
+	
+	;------[ intersect rectangle ]----------[
+	cmp eax,SDBound.left
+	jge @F
+		mov eax,SDBound.left
+	@@:
+	cmp ebx,SDBound.top
+	jge @F
+		mov ebx,SDBound.top
+	@@:
+	
+	cmp ecx,SDBound.right
+	jle @F
+		mov ecx,SDBound.right
+	@@:
+	
+	cmp edx,SDBound.bottom
+	jle @F
+		mov edx,SDBound.bottom
+	@@:
+	;---------------------------------------/
+	
+	;----[ check if left>right ]----[
+	cmp eax,ecx
+	jle @F
+		mov ecx,eax
+	@@:
+	;-------------------------------/
+	;---[ check if top>bottom ]----[
+	cmp ebx,edx
+	jle @F
+		mov edx,ebx
+	@@:
+	;------------------------------/
+	
+	
+	mov SDBound.left,eax
+	mov SDBound.top,ebx
+	mov SDBound.right,ecx
+	mov SDBound.bottom,edx
+	
+	;------[ set zero-flag if clip is null ]-----[
+	.if eax!=ecx && ebx!=edx
+		xor eax,eax
+		inc eax	
+	.else
+		xor eax,eax
+	.endif
+	;--------------------------------------------/
+	
+	ret
+sdEnterClip endp
+
+sdForceClip proc PUBLIC uses eax ebx wid,hei
+	xor eax,eax
+	mov SDDrawOffs.x,eax
+	mov SDDrawOffs.y,eax
+	mov SDBound.left,eax
+	mov SDBound.top,eax
+	
+	mov eax,wid
+	mov ebx,hei
+	.if eax>sTarget_Data.wid
+		mov eax,sTarget_Data.wid
+	.endif
+	.if ebx>sTarget_Data.hei
+		mov ebx,sTarget_Data.hei
+	.endif
+	
+	mov SDBound.right,eax
+	mov SDBound.bottom,ebx
+	ret
+sdForceClip endp
+;=======/
+
+
+;=====[[ sdLockRect >>===\
+sdLockRect proc PUBLIC UseMost pLR,x,y,wid,hei
+	local WasClipped
+	
+	mov esi,pLR
+	
+	;-----[ compute rectangle ]-----[
+	mov WasClipped,0
+	mov eax,x
+	mov ebx,y
+	mov ecx,wid
+	mov edx,hei
+	add eax,SDDrawOffs.x
+	add ebx,SDDrawOffs.y
+	add ecx,eax
+	add edx,ebx
+	;-------------------------------/
+	
+	;------[ clip to SDBound ]----------[
+	cmp eax,SDBound.left
+	jge @F
+		mov eax,SDBound.left
+		mov WasClipped,1
+	@@:
+	cmp ebx,SDBound.top
+	jge @F
+		mov ebx,SDBound.top
+		mov WasClipped,1
+	@@:
+	cmp ecx,SDBound.right
+	jle @F
+		mov ecx,SDBound.right
+		mov WasClipped,1
+	@@:
+	cmp edx,SDBound.bottom
+	jle @F
+		mov edx,SDBound.bottom
+		mov WasClipped,1
+	@@:
+	
+	sub ecx,eax
+	jle _ret
+	sub edx,ebx
+	jle _ret
+	;------------------------------------/
+	
+	
+	;---[ compute pBits ]--------------[
+	mov edi,eax
+	push ebx
+	shl edi,2
+	imul ebx,sTarget_Data.linesize
+	add edi,sTarget_Data.bits
+	add edi,ebx
+	pop ebx
+	;----------------------------------/
+	
+	
+	
+	sub eax,SDDrawOffs.x
+	sub ebx,SDDrawOffs.y
+	
+	
+	mov [esi].SDLOCKEDRECT.x,eax
+	mov [esi].SDLOCKEDRECT.y,ebx
+	mov [esi].SDLOCKEDRECT.wid,ecx
+	mov [esi].SDLOCKEDRECT.hei,edx
+	mov [esi].SDLOCKEDRECT.lpBits,edi
+	sub eax,x
+	sub ebx,y
+	sub ecx,wid
+	sub edx,hei
+	neg ecx
+	neg edx
+	mov [esi].SDLOCKEDRECT.deltaX,eax
+	mov [esi].SDLOCKEDRECT.deltaY,ebx
+	mov [esi].SDLOCKEDRECT.deltaW,ecx
+	mov [esi].SDLOCKEDRECT.deltaH,edx
+	
+	
+	mov eax,sTarget_Data.wid
+	mov [esi].SDLOCKEDRECT.pitch,eax
+	
+	mov eax,WasClipped
+	inc eax
+	ret	
+_ret:
+	xor eax,eax
+	ret
+sdLockRect endp
+;=======/
+
+
+;=====[[ copyright >>===\
+if INCLUDE_COPYRIGHT_TEXT
+
+db 13,10,13,10,13,10
+db "======================================================================",13,10
+db "======================================================================",13,10
+db "*      sDraw Library:  COPYRIGHT   Ultrano Software,                 *",13,10
+db "*                              Ilian Dinev                           *",13,10
+db "*                       http://www.ultranos.com                      *",13,10
+db "======================================================================",13,10
+db "======================================================================",13,10
+db 13,10,13,10,13,10
+
+endif
+;=======/

@@ -1,0 +1,53 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>ResizeSDrawArea</h1>
+<p><span style="font-weight: bold;">ResizeSDrawArea</span> resizes the back-buffer of sDraw. Usually called when the screen-size has been changed (after WM_DISPLAYCHANGE)</p>
+<BR>
+<p>void ResizeSDrawArea(long wid,long hei);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>wid,hei</b></dt>
+  <dd>new dimensions for the back-buffer. If wid=0 and hei=0, the full-screen size is used </dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>
+case WM_DISPLAYCHANGE:<BR>
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ResizeSDrawArea(0,0);<BR>
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+If the screen-size hasn't actually changed, ResizeSDrawArea() will return immediately. 
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="InitSDraw.html">InitSDraw</a>,
+<a href="FreeSDraw.html">FreeSDraw</a>,
+<a href="sdStart.html">sdStart</a>
+</p>
+</body>
+</html>

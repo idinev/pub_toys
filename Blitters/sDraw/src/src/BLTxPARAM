@@ -1,0 +1,56 @@
+sBltParam proc PUBLIC x,y,wid,hei,x2,y2,pSprite
+	push pSourceSprite
+	invoke sdSetSourceSprite,pSprite
+	invoke sBlt,x,y,wid,hei,x2,y2
+	call sdSetSourceSprite
+	ret
+sBltParam endp
+
+sBltTransParam proc PUBLIC x,y,wid,hei,x2,y2,pSprite
+	push pSourceSprite
+	invoke sdSetSourceSprite,pSprite
+	invoke sBltTrans,x,y,wid,hei,x2,y2
+	call sdSetSourceSprite
+	ret
+sBltTransParam endp
+
+sBltAlphaParam proc PUBLIC x,y,wid,hei,x2,y2,Alpha,pSprite
+	push pSourceSprite
+	invoke sdSetSourceSprite,pSprite
+	invoke sBltAlpha,x,y,wid,hei,x2,y2,Alpha
+	call sdSetSourceSprite
+	ret
+sBltAlphaParam endp
+
+sBltTransAlphaParam proc PUBLIC x,y,wid,hei,x2,y2,Alpha,pSprite
+	push pSourceSprite
+	invoke sdSetSourceSprite,pSprite
+	invoke sBltTransAlpha,x,y,wid,hei,x2,y2,Alpha
+	call sdSetSourceSprite
+	ret
+sBltTransAlphaParam endp
+
+sBltAddParam proc PUBLIC x,y,wid,hei,x2,y2,pSprite
+	push pSourceSprite
+	invoke sdSetSourceSprite,pSprite
+	invoke sBltAdd,x,y,wid,hei,x2,y2
+	call sdSetSourceSprite
+	ret
+sBltAddParam endp
+
+sBltAddFadeParam proc PUBLIC x,y,wid,hei,x2,y2,Fader,pSprite
+	push pSourceSprite
+	invoke sdSetSourceSprite,pSprite
+	invoke sBltAddFade,x,y,wid,hei,x2,y2,Fader
+	call sdSetSourceSprite
+	ret
+sBltAddFadeParam endp
+
+
+sBltTintParam proc PUBLIC x,y,wid,hei,x2,y2,dwColor,pSprite
+	push pSourceSprite
+	invoke sdSetSourceSprite,pSprite
+	invoke sBltTint,x,y,wid,hei,x2,y2,dwColor
+	call sdSetSourceSprite
+	ret
+sBltTintParam endp

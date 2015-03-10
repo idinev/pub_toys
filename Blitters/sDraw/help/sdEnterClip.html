@@ -1,0 +1,75 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdEnterClip</h1>
+<p><span style="font-weight: bold;">sdEnterClip</span> adjust the clipper to the specified rectangle</p>
+<BR>
+<p>void sdEnterClip(long x,long y,long wid,long hei);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>x,y,wid,hei</b></dt>
+  <dd>relative rectangle to clip to</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>All registers are preserved, <B>but</b> the Zero Flag is set if the resulting clip is NULL (all next drawing up to sdLeaveClip will be ignored). Useful for determining whether you need to draw on the clip. <BR>
+To C/C++ coders: you can always use the SDBounds rectangle to check if the resulting clip is NULL. 
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>
+<pre>
+	sdEnterClip(10,10,100,100);
+		sDrawRect(7,7,200,200,0xFF0000); // red
+	sdLeaveClip();
+</pre>
+This red 200x200 rectangle is clipped, and the result is visually identical to:
+	<pre>
+		sDrawRect(17,17,93,93,0xFF0000);
+	</pre>
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+Must match every sdEnterClip() with sdLeaveClip(). <BR>
+Clipping is the ideal tool for drawing many independent virtual windows/controls. Clipping is also used by default to stop unnecessary drawing to invisible areas of the currently drawn window. <BR>
+Just before adjusting the clipping-rectangle, sdEnterClip pushes the state of the current clipper (saves its state).
+You can have up to 40 nested clips:<BR>
+<pre>
+	sdEnterClip(10,10,100,100);
+		[drawStuff here...]
+		sdEnterClip(50,50,30,30);
+			[draw some more here]
+		sdLeaveClip();
+		[ you can draw here, too, just watch out not to overdraw the previously clipped area]
+	sdLeaveClip();
+</pre>
+
+The state of the current clip is determined by the<BR>
+extern RECT  SDBound; // current bounding rectangle. For experts' use<BR>
+extern POINT SDDrawOffs; // current draw-offset. For experts' use<BR>
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sdLeaveClip.html">sdLeaveClip</a>,
+<a href="sdForceClip.html">sdForceClip</a>
+</p>
+</body>
+</html>

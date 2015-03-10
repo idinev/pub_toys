@@ -1,0 +1,58 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdLoadFont</h1>
+<p><span style="font-weight: bold;">sdLoadFont</span> loads an <B>sDraw Font</b> from a specified <B>memory</B> location. The loading consists of simply decompressing the data to an internally-allocated array of [header + 8bpp data]</p>
+<BR>
+<p>void* sdLoadFont(void* pSDFontData);<BR>
+extern void* SD_CurFont;
+</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>pSDFontData</b></dt>
+  <dd>memory location, from which to load the SD Font</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>pointer to the SDFont object. Use this value to set the SD_CurFont variable before drawing text. (SD_CurFont is inside sDraw.lib).
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>
+extern char softImage1[];<BR>
+void* MyFont;<BR>
+MyFont = sdLoadFont(&softImage1[0]);<BR>
+...<BR>
+SD_CurFont = MyFont;<BR>
+sTextOut(10,10,"hello world!",0xFFFFFF);<BR>
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+In an sDraw font, only 96 ASCII characters are saved- 32..127. They're in raster format, in an 8bpp array, which is actually their alpha-channel (fonts by themselves don't have RGB color). Use the provided tool "Tools\FontMaker.exe" to make SDFonts. <BR>
+SD fonts have a field in their header, that specifies if the font is 'smooth' (ala WildWords) or 'solid' (ala Fixedsys). This is to gain speed when drawing 'solid' fonts. (used internally by sTextOut)
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sTextOut.html">sTextOut</a>,
+<a href="sdPrintDec.html">sdPrintDec</a>
+</p>
+</body>
+</html>

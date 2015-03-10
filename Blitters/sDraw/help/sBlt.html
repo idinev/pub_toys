@@ -1,0 +1,63 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sBlt</h1>
+<p><span style="font-weight: bold;">sBlt</span>
+copies a rectangle from an sSprite onto the screen backbuffer (or onto the target sSprite in advanced cases). <BR>
+Depending on the flags of the source-sSprite, sBlt performs one of 3 types of blending:<BR>
+1) <b>direct copy</b> - this is by default. The result is visually identical to a GDI's BitBlt(....,SRCCOPY) .<BR>
+2) <b>alphablend</b> - uses the alpha-channel of the sSprite, if the latter is marked as having such. <BR>
+3) <b>premultiplied alphablend</b> - same as alphablend, but faster - if the sSprite's alpha-channel is premultiplied. <BR>
+
+</p>
+<BR>
+<p>void sBlt(long x,long y,long wid,long hei,long x2,long y2);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>x,y,wid,hei,x2,y2</b></dt>
+  <dd>The usual parameters for any Blt-like operation:<BR>
+			x:y  specify the top-left corner of the target rectangle<BR>
+			wid:hei specify the width and height of the target rectangle<BR>
+			x2:y2 specify the top-left corner of the <i>source</i> rectangle
+  </dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>sBlt(0,0,400,300,0,0);
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+<b>Note</b> that all sBltXXX procedures do not check the parameters <b>x2</b> and <b>y2</b> - 
+wrong parameters can lead to a GPF! This means, if your source sSprite is 200x200, 
+the above example code will crash or misbehave.
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sBltParam.html">sBltParam</a>,
+<a href="sBltAlpha.html">sBltAlpha</a>,
+<a href="sdSetSourceSprite.html">sdSetSourceSprite</a>
+</p>
+</body>
+</html>

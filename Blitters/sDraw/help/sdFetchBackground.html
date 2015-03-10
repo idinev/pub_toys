@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdFetchBackground</h1>
+<p><font color="red"><i>Intermeddiate access only</i></font></p>
+<p><span style="font-weight: bold;">sdFetchBackground </span>is used
+to copy a snapshot of the window's GUI into the back-buffer of sDraw
+(which is used to draw on).&nbsp; This is useful for splash-screens, to
+produce a nice effect with
+alpha-channel. <br>
+</p>
+<br>
+<p>void sdFetchBackground();</p>
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+<h4>Example:</h4>
+<p>
+</p>
+<pre>void DrawWindow(HWND hWnd){<br>	if(!sdStart(hWnd))return;<br>	sdFetchBackground(); // usually use it after sdStart()<br>	// now draw some stuff over<br>	....<br>	sdEnd();<br>}<br><br></pre>
+<h4>See Also</h4>
+<p>
+<a href="sdStart.html">sdStart</a>,
+<a href="sdEnd.html">sdEnd</a>,
+<a href="sdEnterClip.html">sdEnterClip</a>,
+<a href="sdLeaveClip.html">sdLeaveClip</a>
+</p>
+</body>
+</html>

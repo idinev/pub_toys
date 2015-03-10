@@ -1,0 +1,22 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>ILB files/data</h1>
+<h4>What are ILB files?</h4>
+<p>
+An .ILB file (introduced in sDraw) is a compressed .bmp (without alpha-channel) or .tga (with alpha-channel). The compression is a bit lossy, since it initially crunches RGB888 (24-bit color) into RGB565 (16-bit color). The alpha channel stays intact (8-bit), if present.  <BR>
+Currently in sDraw, ILB files are mostly useful for images that have alpha-channel. 
+</p><BR>
+
+<h4>Making .ilb files/libs </h4>
+&bull; <B>To a file:</b> Drag-drop a .bmp or .tga file over PackToILB.exe<BR>
+&bull; <B>To a .lib:</b> Drag-drop a .bmp or .tga file over PackBitmap.exe. You need the MASM32 package, otherwise PackBitmap will crash. <BR>
+.bmp files must be 24bpp<BR>
+.tga files must be 32bpp without RLE compression, origin at top-left. 
+
+
+
+</body>
+</html>

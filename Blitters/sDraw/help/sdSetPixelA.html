@@ -1,0 +1,49 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdSetPixelA</h1>
+<p><span style="font-weight: bold;">sdSetPixelA</span> blends the specified pixel with dwColor and Alpha</p>
+<BR>
+<p>void sdSetPixelA(long x,long y,long dwColor,long Alpha);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>x,y</b></dt>
+  <dd>coordinates of the pixel</dd>
+  <dt> <b>dwColor</b></dt>
+  <dd>color to set the pixel with</dd>
+  <dt> <b>Alpha</b></dt>
+  <dd>opacity of dwColor</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Remarks</h4>
+<p>
+sdSetPixelA takes up to 60 cycles to execute. If you need an even faster approach, you can use sdLockRect
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sdSetPixel.html">sdSetPixelA</a>,
+<a href="sdGetPixel.html">sdGetPixel</a>,
+<A href="sdLockRect.html">sdLockRect</a>
+</p>
+</body>
+</html>

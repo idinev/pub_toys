@@ -1,0 +1,46 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdGetPixel</h1>
+<p><span style="font-weight: bold;">sdGetPixel</span> gets the color of the specified pixel</p>
+<BR>
+<p>long sdGetPixel(long x,long y);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>x,y</b></dt>
+  <dd>coordinates of the pixel</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>- NULL, if the x:y pixel isn't in the current clip-rectangle.<BR>
+- The color of the pixel, masked with 0xFFFFFF (to remove garbage-alpha), if x:y belongs to the clip-rectangle.
+</p>
+
+
+
+
+<h4>Remarks</h4>
+<p>
+sdGetPixel takes up to 30 cycles to execute. If you need an even faster approach, you can use sdLockRect.
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sdSetPixelA.html">sdSetPixelA</a>,
+<a href="sdSetPixel.html">sdSetPixel</a>,
+<A href="sdLockRect.html">sdLockRect</a>
+</p>
+</body>
+</html>

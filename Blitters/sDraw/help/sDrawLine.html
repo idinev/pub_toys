@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sDrawLine</h1>
+<p><span style="font-weight: bold;">sDrawLine</span> draws a line from
+x:y to x2:y2 with subpixel accuracy.</p>
+<br>
+<p>void sDrawLine(long x,long y,long x2,long y2,long dwColor)</p>
+<p>void sDrawLineH(long x,long y,long width,long dwColor)<br>
+void sDrawLineV(long x,long y,long height,long dwColor)</p>
+<p>void sDrawLineH_HalfAlpha(long x,long y,long width,long dwColor)<br>
+void sDrawLineV_HalfAlpha(long x,long y,long height,long dwColor)<br>
+</p>
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>x,y</b></dt>
+  <dd>coordinates of starting point</dd>
+  <dt> <b>x2,y2</b></dt>
+  <dd>coordinates of ending point (Note: order of points doesn't matter)</dd>
+  <dt> <b>dwColor</b></dt>
+  <dd>color of the line</dd>
+</dl>
+<br>
+<br>
+<span style="font-weight: bold;">width/height</span> - on sDrawLineH
+and sDrawLineV, the length of the line<br>
+<dl>
+</dl>
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+<h4>Example:</h4>
+<p>sDrawLine(10,10,1000,30,0xFF0000);
+</p>
+<h4>Remarks</h4>
+<p>
+Internally, sDrawLine uses sdSetPixelA(), doesn't do internal clipping
+of the line beforehand. Thus, do not expect max performance.<br>
+</p>
+<p>sDrawLineH and sDrawLineV are optimized versions to draw
+respectively horizontal and vertical lines. <br>
+</p>
+<p>sDrawLineH_HalfAlpha and sDrawLineV_HalfAlpha are optimized versions
+to draw respectively horizontal and vertical lines, with opacity = 50% </p>
+<h4>See Also</h4>
+<p>
+<a href="sdSetPixelA.html">sdSetPixelA</a>
+</p>
+</body>
+</html>

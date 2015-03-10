@@ -1,0 +1,247 @@
+
+
+
+sDrawRectROP proc PUBLIC UseAll x,y,wid,hei,dwColor,dwROP
+	local extraDest
+	CHECKDRAWRECT
+	COMPUTEBLTBITS	
+	mov eax,dwColor
+	mov edx,dwROP
+	mov ebx,dwColor
+	sub edi,4
+	mov esi,sTarget_Data.linesize
+	
+	cmp edx,SD_COPY
+	je _SD_COPY
+	cmp edx,SD_XOR
+	je _SD_XOR
+	cmp edx,SD_ADD
+	je _SD_ADD
+	cmp edx,SD_SUB
+	je _SD_SUB
+	cmp edx,SD_OR
+	je _SD_OR
+	cmp edx,SD_AND
+	je _SD_AND
+	cmp edx,SD_SHR
+	je _SD_SHR
+	cmp edx,SD_MUL
+	je _SD_MUL
+	cmp edx,SD_ADDSAT
+	je _SD_ADDSAT
+	cmp edx,SD_SUBSAT
+	je _SD_SUBSAT
+	cmp edx,SD_SHRSAT
+	je _SD_SHRSAT
+	cmp edx,SD_SHLSAT
+	je _SD_SHLSAT
+	
+	
+	jmp _ret
+	
+	;------------[ COPY ]---------------[
+	_SD_COPY:
+		mov ecx,wid
+		align 16
+		@@:
+			mov [edi+ecx*4],ebx
+		dec ecx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _SD_COPY
+	jmp _ret
+	;-----------------------------------/
+	
+	
+	;------------[ XOR ]---------------[
+	_SD_XOR:
+		mov ecx,wid
+		align 16
+		@@:
+			xor [edi+ecx*4],ebx
+		dec ecx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _SD_XOR
+	jmp _ret
+	;----------------------------------/
+	
+	;------------[ ADD ]---------------[
+	_SD_ADD:
+		mov ecx,wid
+		@@:
+			add [edi+ecx*4],ebx
+		dec ecx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _SD_ADD
+	jmp _ret
+	;----------------------------------/
+	
+	;------------[ SUB ]---------------[
+	_SD_SUB:
+		mov ecx,wid
+		@@:
+			sub [edi+ecx*4],ebx
+		dec ecx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _SD_SUB
+	jmp _ret
+	;----------------------------------/
+	
+	;------------[ OR  ]---------------[
+	_SD_OR:
+		mov ecx,wid
+		@@:
+			or [edi+ecx*4],ebx
+		dec ecx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _SD_OR
+	jmp _ret
+	;----------------------------------/
+	
+	;------------[ AND ]---------------[
+	_SD_AND:
+		mov ecx,wid
+		@@:
+			and [edi+ecx*4],ebx
+		dec ecx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _SD_AND
+	jmp _ret
+	;----------------------------------/
+	
+	;------------[ SHR ]---------------[
+	_SD_SHR:
+		mov ecx,ebx
+		mov edx,wid
+		@@:
+			shr dword ptr [edi+ecx*4],cl
+		dec edx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _SD_SHR
+	jmp _ret
+	;----------------------------------/
+	
+	;------------[ MUL ]---------------[
+	_SD_MUL:
+		mov ecx,wid
+		@@:
+			mov eax,[edi+ecx*4]
+			mov edx,eax
+			and eax,0FF00FFh
+			and edx,000FF00h
+			imul eax,ebx
+			imul edx,ebx
+			and eax,0FF00FF00h
+			and edx,000FF0000h
+			or eax,edx
+			shr eax,8
+			mov [edi+ecx*4],eax
+		dec ecx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _SD_MUL
+	jmp _ret
+	;----------------------------------/
+	
+	;------------[ ADDSAT ]---------------[
+	_SD_ADDSAT:
+		movd mm1,dwColor
+		_addsat_nl:
+		mov ecx,wid
+		align 16
+		@@:
+			movd mm0,[edi+ecx*4]
+			paddusb mm0,mm1
+			movd [edi+ecx*4],mm0
+		dec ecx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _addsat_nl
+	emms
+	jmp _ret
+	;-------------------------------------/
+	
+	;------------[ SUBSAT ]---------------[
+	_SD_SUBSAT:
+		movd mm1,dwColor
+		_subsat_nl:
+		mov ecx,wid
+		align 16
+		@@:
+			movd mm0,[edi+ecx*4]
+			psubusb mm0,mm1
+			movd [edi+ecx*4],mm0
+		dec ecx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _subsat_nl
+	emms
+	jmp _ret
+	;-------------------------------------/
+	;------------[ SHRSAT ]---------------[
+	_SD_SHRSAT:
+		mov ebx,07F7F7Fh
+		_shrsat_nl:
+		mov ecx,wid
+		align 16
+		@@:
+			mov eax,[edi+ecx*4]
+			shr eax,1
+			and eax,ebx
+			mov [edi+ecx*4],eax
+		dec ecx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _shrsat_nl
+	jmp _ret
+	;-------------------------------------/
+	;------------[ SHLSAT ]---------------[
+	_SD_SHLSAT:
+		mov ecx,wid
+		align 16
+		@@:
+			movd mm0,[edi+ecx*4]
+			paddusb mm0,mm0
+			movd [edi+ecx*4],mm0
+		dec ecx
+		jnz @B
+		
+		add edi,esi
+		dec hei
+	jnz _SD_SHLSAT
+	emms
+	jmp _ret
+	;-------------------------------------/
+	
+	
+	
+_ret:	ret
+sDrawRectROP endp

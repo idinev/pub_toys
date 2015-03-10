@@ -1,0 +1,459 @@
+.data
+	sd_pLastSprite dd 0
+.code
+	
+
+sdRegisterSprite proc PRIVATE uses eax edx pSprite
+	mov edx,pSprite
+	.if edx
+		
+		mov eax,sd_pLastSprite
+		mov sd_pLastSprite,edx
+		mov [edx].sSprite.zz_pNext,eax
+	.endif
+	ret
+sdRegisterSprite endp
+
+sdUnregisterSprite proc PRIVATE uses eax ecx edx pSprite
+	mov edx,pSprite
+	mov ecx,sd_pLastSprite
+	test edx,edx
+	jz _ret
+	
+	.if edx==ecx
+		mov eax,[ecx].sSprite.zz_pNext
+		mov sd_pLastSprite,eax
+		jmp _ret
+	.endif
+	
+	.while ecx
+		mov eax,[ecx].sSprite.zz_pNext
+		.if eax==edx ; found it
+			mov eax,[edx].sSprite.zz_pNext
+			mov [ecx].sSprite.zz_pNext,eax
+			jmp _ret
+		.endif
+		mov ecx,eax		
+	.endw
+	
+_ret:	ret
+sdUnregisterSprite endp
+
+sdDeleteSprite proc PUBLIC UseAll pSprite
+	mov ecx,pSprite
+	test ecx,ecx
+	jz _ret
+	invoke sdUnregisterSprite,ecx
+	
+	free [ecx].sSprite.bits
+	free ecx
+	
+_ret:	ret
+sdDeleteSprite endp
+
+sdDeleteAllSprites proc PRIVATE UseAll
+	.while sd_pLastSprite
+		invoke sdDeleteSprite,sd_pLastSprite
+	.endw
+	
+	ret
+sdDeleteAllSprites endp
+
+	
+
+
+CreateDIBsprite proc PRIVATE UseMost wid,hei
+	local hdr1:BITMAPINFOHEADER
+	local s:sSprite
+	
+	m2m s.wid,wid
+	m2m s.hei,hei
+	mov s.dwFlags,0
+	
+	
+	;--------[ setup bitmapinfohdr ]-----------[
+	Clear hdr1
+	mov hdr1.biSize,sizeof BITMAPINFOHEADER
+	m2m hdr1.biWidth,wid
+	m2m hdr1.biHeight,hei
+	neg hdr1.biHeight  ; !!!!!! make the height negative
+	mov hdr1.biPlanes,1
+	mov hdr1.biBitCount,32
+	mov hdr1.biCompression,BI_RGB
+	mov eax,wid
+	mul hei
+	shl eax,2
+	mov hdr1.biSizeImage,eax
+	mov hdr1.biClrImportant,0
+	mov hdr1.biClrUsed,0
+	;-------------------------------------------/
+	
+	invoke CreateDIBSection,backDC,addr hdr1,DIB_RGB_COLORS,addr s.bits,0,0
+	mov s.hBitmap,eax
+	
+	;---[ compute stuff ]-------[
+	mov eax,wid
+	shl eax,2
+	mov s.linesize,eax
+	;---------------------------/
+	
+	invoke memclone,addr s,sizeof sSprite
+	ret
+CreateDIBsprite endp
+
+
+sdSpriteFromHBITMAP proc PUBLIC UseMost hBitmap
+	local bi:BITMAP,wid,hei
+	local hdr1:BITMAPINFOHEADER
+	local s:sSprite
+	
+	.if !hBitmap
+		xor eax,eax
+		ret
+	.endif
+	
+	
+	invoke GetObject,hBitmap,sizeof BITMAP,addr bi
+	m2m wid,bi.bmWidth
+	m2m hei,bi.bmHeight
+		
+	
+	
+	m2m s.wid,wid
+	m2m s.hei,hei
+	mov s.dwFlags,0
+	mov s.hBitmap,0
+	
+	;--------[ setup bitmapinfohdr ]-----------[
+	Clear hdr1
+	mov hdr1.biSize,sizeof BITMAPINFOHEADER
+	m2m hdr1.biWidth,wid
+	m2m hdr1.biHeight,hei
+	neg hdr1.biHeight
+	mov hdr1.biPlanes,1
+	mov hdr1.biBitCount,32
+	mov hdr1.biCompression,BI_RGB
+	mov eax,wid
+	mul hei
+	shl eax,2
+	mov hdr1.biSizeImage,eax
+	;-------------------------------------------/
+	
+	
+	mov s.bits,malloc(hdr1.biSizeImage)
+	invoke GetDIBits,backDC,hBitmap,0,hei,s.bits,addr hdr1,DIB_RGB_COLORS
+	
+	
+	;---[ compute stuff ]-------[
+	mov eax,wid
+	shl eax,2
+	mov s.linesize,eax
+	;---------------------------/
+	
+	invoke memclone,addr s,sizeof sSprite
+	invoke sdRegisterSprite,eax
+	
+	ret
+sdSpriteFromHBITMAP endp
+
+
+sdCreateBlankSprite proc PUBLIC UseMost wid,hei
+	local s:sSprite
+	
+	m2m s.wid,wid
+	m2m s.hei,hei
+	mov s.dwFlags,0
+	mov s.hBitmap,0
+	
+	mov eax,wid
+	imul eax,hei
+	shl eax,2
+	mov s.bits,malloc(eax)
+	
+	;---[ compute stuff ]-------[
+	mov eax,wid
+	shl eax,2
+	mov s.linesize,eax
+	;---------------------------/
+	
+	invoke memclone,addr s,sizeof sSprite
+	invoke sdRegisterSprite,eax
+	
+	ret
+sdCreateBlankSprite endp
+
+
+sdSpriteFromBitmapFile proc PUBLIC UseMost lpszFileName
+	invoke LoadImage,0,lpszFileName,IMAGE_BITMAP,0,0,LR_LOADFROMFILE
+	.if eax
+		mov ecx,eax
+		invoke sdSpriteFromHBITMAP,eax
+		push eax
+		invoke DeleteObject,ecx
+		pop eax
+	.endif
+	ret
+sdSpriteFromBitmapFile endp
+
+
+
+sdSpriteFromILB proc PUBLIC UseMost lpSourceData
+	local wid,hei,IsAlpha,WIDxHEI
+	local PackedSize,pPackedBuf,pUnpackedBuf
+	local pSprite,wid2
+	
+	;-----[ get info from the ILIX Bitmap ]----[
+	mov IsAlpha,0
+	mov ebx,lpSourceData
+	mov eax,[ebx]
+	.if eax & 65536
+		mov IsAlpha,1
+		movzx eax,ax
+	.endif
+	mov wid,eax
+	mov eax,[ebx+4]
+	mov hei,eax
+	mov eax,[ebx+8]
+	mov PackedSize,eax
+	add ebx,12
+	mov pPackedBuf,ebx
+	
+	mov eax,wid
+	imul eax,hei
+	mov WIDxHEI,eax
+	.if IsAlpha
+		lea eax,[eax+eax*2]
+	.else
+		shl eax,1
+	.endif
+	mov pUnpackedBuf,malloc(eax)
+	;------------------------------------------/
+	
+	;--------[ decompress into 16-bit or 16+8-bit ]----[
+	invoke unpack,pPackedBuf,pUnpackedBuf,PackedSize
+	;--------------------------------------------------/
+	
+	invoke sdCreateBlankSprite,wid,hei
+	mov pSprite,eax
+	
+	mov edi,[eax].sSprite.bits
+	mov esi,pUnpackedBuf
+	
+	;------------[ deflate 16->32 ]-----------------------------------------------------------[
+	.if IsAlpha
+		mov eax,pSprite
+		mov [eax].sSprite.dwFlags,SDRAWSPRITE_HASALPHA
+		mov ecx,WIDxHEI
+		lea ecx,[esi+ecx*2]
+		nextline:
+			m2m wid2,wid
+			align 16
+			@@:
+				;---[16->32]--------\
+				mov dx,[esi]
+				mov al,dl
+				shl al,3
+				mov [edi+0],al
+				shr dx,5
+				mov al,dl
+				shl al,2
+				mov [edi+1],al
+				mov al,[ecx]
+				shr dx,6
+				shl dl,3
+				mov [edi+2],dl
+				mov byte ptr[edi+3],al
+				;-------------------/
+				add esi,2
+				add edi,4
+				inc ecx
+			dec wid2
+			jnz @B
+			
+		dec hei
+		jnz nextline
+		
+	.else
+		nextline2:
+			mov ecx,wid
+			align 16
+			@@:
+				;---[16->24]--------\
+				mov dx,[esi]
+				mov al,dl
+				shl al,3
+				mov [edi+0],al
+				shr dx,5
+				mov al,dl
+				shl al,2
+				mov [edi+1],al
+				shr dx,6
+				shl dl,3
+				mov [edi+2],dl
+				mov byte ptr[edi+3],255
+				;-------------------/
+				add esi,2
+				add edi,4
+			dec ecx
+			jnz @B
+			
+		dec hei
+		jnz nextline2
+			
+	.endif
+	;-----------------------------------------------------------------------------------------/
+	
+	mov eax,pSprite
+	ret
+sdSpriteFromILB endp
+
+sdSpriteFromILBFile proc PUBLIC UseMost lpszFileName
+	local nread,f1,fsiz,pPacked
+	
+	invoke CreateFile,lpszFileName,GENERIC_READ,0,0,OPEN_EXISTING,0,0
+	.if eax==-1
+		xor eax,eax
+		ret
+	.endif
+	mov f1,eax
+	invoke GetFileSize,f1,0
+	mov fsiz,eax
+	mov pPacked,malloc(eax)
+	invoke ReadFile,f1,pPacked,fsiz,addr nread,0
+	invoke CloseHandle,f1
+	invoke sdSpriteFromILB,pPacked
+	free pPacked
+	ret
+sdSpriteFromILBFile endp
+
+
+
+.data
+	IID_IPicture dd 07BF80980H
+		dw 0BF32H, 0101AH
+		db 08BH, 0BBH, 000H, 0AAH, 000H, 030H, 00CH, 0ABH
+.code
+	
+	
+
+sdSpriteFromJPG proc PUBLIC UseMost pData,DataSize
+	local PictuBaka,pstm,hGlobal
+	local hBmp
+	local pSprite
+	
+	mov pSprite,0
+	
+	;-----[ make hGlobal ]----------------------[
+	invoke GlobalAlloc,GMEM_MOVEABLE,DataSize
+	mov hGlobal, eax
+	test eax,eax
+	jz _ret
+	invoke GlobalLock, hGlobal
+	test eax,eax
+	je _ret ; we had an error
+	
+	invoke memmove,eax,pData,DataSize
+	invoke GlobalUnlock, hGlobal
+	;-------------------------------------------/
+	
+	;----[ create IStream* from global memory ]------------[
+	CreateStreamOnHGlobal proto :DWORD,:DWORD,:DWORD
+	OleLoadPicture proto :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+	CoInitialize proto :DWORD
+	CoUninitialize proto
+	
+	invoke CreateStreamOnHGlobal, hGlobal,1,addr pstm
+	test eax,eax
+	jnz _ret
+	;------------------------------------------------------/
+	
+	
+	;-----[ Create IPicture from image file ]---------------------------------------[
+	mov ecx, PictuBaka
+        invoke OleLoadPicture, pstm, DataSize,0, ADDR IID_IPicture, addr PictuBaka
+	.if eax
+		; pstm->Release()
+		multi  mov eax,pstm | push eax | mov eax,[eax] | call dword ptr[eax+2*4]
+		
+		jmp _ret
+	.endif
+	;-------------------------------------------------------------------------------/
+	
+	
+	;---------[ make the pSprite ]--------------------------------------------------------------------------[
+	; PictuBaka->get_Handle(&hBmp)
+	multi  lea eax,hBmp | push eax | mov eax,PictuBaka | push eax | mov eax,[eax] | call dword ptr[eax+3*4]
+	.if !eax
+		invoke sdSpriteFromHBITMAP,hBmp
+		mov pSprite,eax
+	.endif
+	;-------------------------------------------------------------------------------------------------------/
+	
+	;--------[ release stuff ]----------------------------------------------------[
+	; PictuBaka->Release()
+	multi  mov eax,PictuBaka | push eax | mov eax,[eax] | call dword ptr[eax+2*4]
+	
+	; pstm->Release()
+	multi  mov eax,pstm | push eax | mov eax,[eax] | call dword ptr[eax+2*4]
+	;-----------------------------------------------------------------------------/
+	
+_ret:	
+	.if hGlobal
+		invoke GlobalFree,hGlobal
+	.endif
+	mov eax,pSprite
+	ret
+sdSpriteFromJPG endp
+
+
+sdSpriteFromJPGFile proc PUBLIC UseMost lpszFileName
+	local nread,f1,fsiz,pPacked
+	
+	invoke CreateFile,lpszFileName,GENERIC_READ,0,0,OPEN_EXISTING,0,0
+	.if eax==-1
+		xor eax,eax
+		ret
+	.endif
+	mov f1,eax
+	invoke GetFileSize,f1,0
+	mov fsiz,eax
+	mov pPacked,malloc(eax)
+	invoke ReadFile,f1,pPacked,fsiz,addr nread,0
+	invoke CloseHandle,f1
+	invoke sdSpriteFromJPG,pPacked,fsiz
+	free pPacked
+	ret
+sdSpriteFromJPGFile endp
+
+
+
+sdSetSourceSprite proc PUBLIC uses ecx esi edi pSprite
+	mov esi,pSprite
+	.if !esi
+		mov esi,SD_BackSprite
+	.endif
+	mov pSourceSprite,esi
+	mov edi,offset sSource_Data
+	mov ecx,(sizeof sSprite)/4
+	rep movsd
+	ret
+sdSetSourceSprite endp
+
+sdSetTargetSprite proc PUBLIC uses eax pSprite
+	mov eax,pSprite
+	.if !eax
+		mov eax,SD_BackSprite
+	.endif
+	mov pTargetSprite,eax
+	
+	invoke memmove,addr sTarget_Data,eax,sizeof sSprite
+	ret
+sdSetTargetSprite endp
+
+
+
+
+
+
+
+

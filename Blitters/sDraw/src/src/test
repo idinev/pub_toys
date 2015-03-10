@@ -1,0 +1,602 @@
+if COMPILE_AS_DLL
+
+	LibMain proc PUBLIC hInstDLL,reason, unused
+		mov eax,1
+		ret
+	LibMain Endp
+	
+	sdSetCurFont proc PUBLIC pFont
+		m2m SD_CurFont,pFont
+		ret
+	sdSetCurFont endp
+	
+	
+	
+	
+	@CatStr(<en>,<dif>) ; trick masm
+	@CatStr(<en>,<d LibMain>) ; trick masm
+endif
+
+
+if COMPILE_AS_EXE eq 0
+	@CatStr(<en>,<dif>) ; trick masm
+	@CatStr(<en>,<d  >) ; trick masm
+endif
+
+
+
+
+
+includelib \masm32\lib\ole32.lib
+includelib \masm32\lib\oleaut32.lib
+
+
+
+
+include Font1.inc
+MakeOneWindow proc wid,hei,pFunc,pTitle
+	local wc:WNDCLASSEX
+	local rect:RECT
+	local hInst
+	Clear wc
+	mov wc.cbSize,sizeof  wc
+	m2m wc.lpfnWndProc,pFunc
+	mov wc.hCursor,$invoke(LoadCursor,0,IDC_ARROW)
+	mov wc.hInstance,$invoke(GetModuleHandle,0)
+	mov hInst,eax
+	mov wc.hIcon,$invoke (LoadIcon,eax,1)
+	mov wc.lpszClassName,T("OneWindowCls")
+	invoke RegisterClassEx,addr wc
+	;-------------------------------------------/
+	;-----[ adjust window size ]---------\
+	mov rect.left,0
+	mov rect.top,0
+	m2m rect.right,wid
+	m2m rect.bottom,hei
+	invoke AdjustWindowRect,addr rect,WS_POPUP or WS_CAPTION or WS_VISIBLE or WS_SYSMENU,0
+	mov eax,rect.right
+	sub eax,rect.left
+	mov ecx,rect.bottom
+	sub ecx,rect.top
+	;------------------------------------/
+	
+	invoke CreateWindowEx,0,wc.lpszClassName,pTitle,WS_POPUP or WS_CAPTION or WS_VISIBLE or WS_SYSMENU,50,50,eax,ecx,0,0,hInst,0
+	ret
+MakeOneWindow endp
+
+
+
+;
+;
+; To test this file, remove the "end" above, and in sDraw.tix  remove the "!"  from "!sDraw"
+;
+;
+
+.data
+	spr1 dd ?
+	spr2 dd ?
+	dude dd ?
+	ball dd ?
+	txt1 dd ?
+	jpg1 dd ?
+	imgCable dd ?
+	round1 dd ?
+	hwnd1 dd ?
+	
+	font1 dd ?
+.code
+	
+	
+includelib Ball_tga.lib
+externdef Ball_tga:DWORD
+	
+
+Cable struct
+	first	POINT <>
+	p1	POINT <>
+	p3	POINT <>
+	last 	POINT <>
+	inert1	POINT <>
+	inert3	POINT <>
+	IsResting	dd ?
+	dwColor	dd  151515h
+Cable ends
+
+
+AnimateCable proc UseAll pCable
+	local p1x,p3x,p1y,p3y
+	local I1:POINT,I3:POINT ; intertias, in real4
+	local TM:POINT ; in int
+	mov ecx,pCable
+	assume ecx:ptr Cable
+	.if !ecx || [ecx].IsResting
+		ret
+	.endif
+	
+	
+	;----[ compute TM ]--------------\
+	mov eax,[ecx].first.x
+	add eax,[ecx].last.x
+	sar eax,1
+	mov TM.x,eax
+	
+	mov eax,[ecx].first.y
+	mov edx,[ecx].last.y
+	.if sdword ptr eax<edx
+		mov eax,edx
+	.endif
+	add eax,50
+	mov edx,[ecx].first.x
+	sub edx,[ecx].last.x
+	.if SIGN?
+		neg edx
+	.endif
+	sar edx,2
+	add eax,edx
+	
+	
+	
+	mov TM.y,eax
+	;--------------------------------/
+	
+	;-----[ compute p1x,p3x ]-------[
+	; p1x = avg(tmx,firstx
+	mov ebx,TM.x
+	mov edx,ebx
+	add ebx,[ecx].first.x
+	add edx,[ecx].last.x
+	sar ebx,1
+	sar edx,1
+	mov p1x,ebx
+	mov p3x,edx	
+	;-------------------------------/
+	;------[ compute p1y,p3y ]--------[
+	mov ebx,TM.y
+	lea ebx,[ebx+ebx*2]
+	mov edx,ebx
+	add ebx,[ecx].first.y
+	add edx,[ecx].last.y
+	sar ebx,1
+	sar edx,1
+	mov p1y,ebx
+	mov p3y,edx
+	m2m p1y,TM.y
+	m2m p3y,TM.y
+	;---------------------------------/
+	
+	
+.data
+	ccvar1 real4 0.2 ; speed
+	ccvar2 real4 0.7 ; elasticity
+.code
+	
+	@@INERTCAB macro _PTX,_PT,_INER
+		fild _PTX
+		fisub [ecx]._PT
+		fmul ccvar1
+		fadd [ecx]._INER
+		fild [ecx]._PT
+		fadd ST,ST(1)
+		fistp [ecx]._PT
+		fmul ccvar2
+		fstp [ecx]._INER
+		
+		;mov eax,_PTX
+		;sub eax,[ecx]._PT
+		;sar eax,2
+		;add eax,[ecx]._INER
+		;add [ecx]._PT,eax
+		;sar eax,1
+		;mov [ecx]._INER,eax
+	endm
+	
+	
+	
+	;---[ compute I1, anim P1 ]-----\
+	@@INERTCAB p1x,p1.x,inert1.x
+	@@INERTCAB p1y,p1.y,inert1.y
+	;-------------------------------/
+	
+	;---[ compute I3, anim P3 ]-----\
+	@@INERTCAB p3x,p3.x,inert3.x
+	@@INERTCAB p3y,p3.y,inert3.y
+	;-------------------------------/
+	
+	mov esi,7FFFFFFFh
+	movf edi,0.1
+	mov eax,[ecx].inert1.x
+	mov ebx,[ecx].inert1.y
+	mov edx,[ecx].inert3.x
+	mov ecx,[ecx].inert3.y
+	and eax,esi
+	and ebx,esi
+	and ecx,esi
+	and edx,esi
+	
+	.if eax<edi && ebx<edi && ecx<edi && edx<edi
+		mov ecx,pCable
+		mov [ecx].IsResting,1
+	.endif
+	
+	
+	
+	
+	assume ecx:nothing
+	ret
+AnimateCable endp
+
+
+
+Shader1 proc x,y,dwColor
+	invoke sDrawRectROP,x,y,5,5,151515h,SD_SUBSAT
+	ret
+Shader1 endp
+
+
+Shader3 proc uses ecx x,y,dwColor
+.data
+	SH3WR dd 0
+	SH3RD dd 0
+	SH3HX dd 8 dup (?)
+	SH3HY dd 8 dup (?)
+.code
+	invoke sBltTint,x,y,5,5,0,0,dwColor
+	mov ecx,SH3WR
+	and ecx,7
+	m2m SH3HX[ecx*4],x
+	m2m SH3HY[ecx*4],y
+	inc SH3WR
+	.if SH3WR>4
+		mov ecx,SH3RD
+		and ecx,7		
+		invoke sBltAdd,SH3HX[ecx*4],SH3HY[ecx*4],5,5,12,0
+		inc SH3RD
+	.endif	
+	
+	ret
+Shader3 endp
+Shader3_init proc
+	mov SH3WR,0
+	mov SH3RD,0
+	ret
+Shader3_init endp
+Shader3_finish proc
+	mov eax,SH3RD
+	mov ecx,eax
+	.while eax!=SH3WR
+		and ecx,7
+		invoke sBltAdd,SH3HX[ecx*4],SH3HY[ecx*4],5,5,6,0
+		inc eax
+		inc ecx
+	.endw
+	
+	ret
+Shader3_finish endp
+
+DrawCable proc pCable,IsSelected
+	;----[ SHADOW ]-------------------------------------[
+	mov ecx,pCable
+	
+	
+	
+	assume ecx:ptr Cable
+	mov eax,10
+	add [ecx].first.x,2
+	add [ecx].first.y,2
+	add [ecx].p1.x,eax
+	add [ecx].p1.y,eax
+	add [ecx].p3.x,eax
+	add [ecx].p3.y,eax
+	.if IsSelected
+		add [ecx].last.x,eax
+		add [ecx].last.y,eax
+	.endif
+	
+	invoke sDrawBSplineShade,ecx,20,0,Shader1,5
+	sub [ecx].first.x,2
+	sub [ecx].first.y,2
+	sub [ecx].p1.x,eax
+	sub [ecx].p1.y,eax
+	sub [ecx].p3.x,eax
+	sub [ecx].p3.y,eax
+	.if IsSelected
+		sub [ecx].last.x,eax
+		sub [ecx].last.y,eax
+	.endif
+	;---------------------------------------------------/
+	
+	;------[ CABLE ]----------------------------------\
+	invoke sdSetSourceSprite,imgCable
+	invoke Shader3_init
+	mov ecx,pCable
+	invoke sDrawBSplineShade,pCable,20,[ecx].dwColor,Shader3,5
+	invoke Shader3_finish
+	
+	;-------------------------------------------------/
+	;mov ecx,pCable
+	;invoke sBltTint,[ecx].p1.x,[ecx].p1.y,5,5,0,0,[ecx].dwColor
+	;invoke sBltTint,[ecx].p3.x,[ecx].p3.y,5,5,0,0,[ecx].dwColor
+	;invoke sDrawRectROP,[ecx].p1.x,[ecx].p1.y,8,8,303030h,SD_ADDSAT
+	;invoke sDrawRectROP,[ecx].p3.x,[ecx].p3.y,8,8,303030h,SD_ADDSAT
+	
+	
+	
+	assume ecx:nothing
+	ret
+DrawCable endp
+
+
+DistanceFromLineToPoint proc uses ebx ecx edx mousex,mousey,X0,Y0,X1,Y1 
+	;dist = abs( ;(Y0-Y1)*mousex + (X1-X0)*mousey + (X0*Y1) - (X1*Y0) ;) 
+	mov eax,X0
+	mov ebx,X1
+	mov ecx,Y0
+	mov edx,Y1
+	.if sdword ptr eax>ebx
+		xchg eax,ebx
+	.endif
+	.if sdword ptr ecx>edx
+		xchg ecx,edx
+	.endif
+	sub eax,4
+	add ebx,4
+	sub ecx,4
+	add edx,4
+	cmp mousex,eax
+	jl _ret
+	cmp mousex,ebx
+	jg _ret
+	cmp mousey,ecx
+	jl _ret
+	cmp mousey,edx
+	jg _ret
+	
+	
+	
+	mov eax,Y0
+	sub eax,Y1 
+	imul eax,mousex 
+	mov ebx,X1 
+	sub ebx,X0 
+	imul ebx,mousey 
+	mov ecx,X0 
+	imul ecx,Y1 
+	mov edx,X1 
+	imul edx,Y0 
+	add eax,ebx 
+	add eax,ecx 
+	sub eax,edx 
+	imul eax,eax
+	
+	mov ebx,X1
+	sub ebx,X0
+	mov ecx,Y1
+	sub ecx,Y0
+	imul ebx,ebx
+	imul ecx,ecx
+	add ebx,ecx
+	xor edx,edx
+	inc ebx
+	div ebx
+	ret
+	
+	
+_ret:	mov eax,7FFFFFFFh
+	ret
+DistanceFromLineToPoint endp
+
+DrawSpline proc UseAll
+	local pt:POINT
+	
+	invoke GetCursorPos,addr pt
+	invoke ScreenToClient,hwnd1,addr pt
+.data
+	cab1 Cable <<400,130>,<0,0>,<0,0>,<200,0>,<0,0>,<0,0>,0,00800000h>
+	cab2 Cable <<400,0>,<0,0>,<0,0>,<10,50>,<0,0>,<0,0>,0,0>
+	cab3 Cable <<0,100>,<0,0>,<0,0>,<0,0>,<0,0>,<0,0>,0,804000h>
+	cab4 Cable <<0,10>,<0,0>,<0,0>,<0,0>,<0,0>,<0,0>,0,100>
+	cab5 Cable <<0,140>,<0,0>,<0,0>,<400,0>,<0,0>,<0,0>,0,100>
+	cab6 Cable <<0,160>,<0,0>,<0,0>,<400,0>,<0,0>,<0,0>,0,100>
+	cab7 Cable <<0,100>,<0,0>,<0,0>,<400,0>,<0,0>,<0,0>,0,100>
+	cab8 Cable <<0,170>,<0,0>,<0,0>,<400,100>,<0,0>,<0,0>,0,100>
+.code
+	
+	mov eax,pt.x
+	mov ecx,pt.y
+	
+	mov cab3.last.x,eax
+	mov cab3.last.y,ecx
+	mov cab3.IsResting,0
+	
+	
+	invoke AnimateCable,addr cab1
+	invoke AnimateCable,addr cab2
+	invoke AnimateCable,addr cab3
+	invoke AnimateCable,addr cab4
+	invoke AnimateCable,addr cab5
+	invoke AnimateCable,addr cab6
+	invoke AnimateCable,addr cab7
+	invoke AnimateCable,addr cab8
+	invoke DrawCable,addr cab1,0
+	invoke DrawCable,addr cab2,0
+	invoke DrawCable,addr cab4,0
+	invoke DrawCable,addr cab5,0
+	invoke DrawCable,addr cab6,0
+	invoke DrawCable,addr cab7,0
+	invoke DrawCable,addr cab8,0
+	
+	
+	invoke DrawCable,addr cab3,1
+	
+.data
+	Line1 POINT <200,200>
+	Line2 POINT <100,200>
+.code
+	
+	;trace "%d:%d",pt.x,pt.y
+	invoke DistanceFromLineToPoint,pt.x,pt.y,Line1.x,Line1.y,Line2.x,Line2.y
+	
+	mov edx,255
+	.if eax<=16
+		shl edx,16
+	.endif
+	invoke sDrawLine,Line1.x,Line1.y,Line2.x,Line2.y,edx
+	ret
+DrawSpline endp
+	
+	
+TestDraw proc hWnd
+	local sdl:SDLOCKEDRECT
+	local pt:POINT
+	
+	invoke GetCursorPos,addr pt
+	invoke ScreenToClient,hwnd1,addr pt
+	
+	
+	invoke sdStart,hWnd
+	jz _ret
+	
+	invoke sdSetSourceSprite,spr2
+	invoke sBlt,0,0,400,300,0,0
+	
+	
+	
+	
+	invoke sdSetSourceSprite,spr1
+	invoke sBltAlpha,50,80,100,100,0,0,80
+	
+	invoke sdEnterClip,40,40,100,30
+	invoke sDrawRectROP,0,0,100,30,RGB(30,0,0),SD_ADDSAT
+	invoke sTextOut,0,0,T("An especially long text?",13,10,"Should show correctly"),-1
+	invoke sdLeaveClip
+	
+	invoke GetTickCount
+	shr eax,3
+	and eax,511
+	.if eax>256
+		sub eax,512
+		neg eax
+	.endif	
+	mov edx,eax
+	shr edx,2
+	add eax,100
+	invoke sBltAddFade,eax,28,24,24,100,0,eax
+	
+	invoke sdSetSourceSprite,dude
+	invoke sBlt,pt.x,pt.y,46,57,0,0
+	;invoke sBltTint,220,60,125,57,50,0,-1
+	
+	invoke sdSetSourceSprite,txt1
+	invoke sBltTint,220,200,100,50,0,0,-1
+	invoke sDrawRectROP,100,100,400,300,65 shl 16,SD_ADDSAT
+	;invoke sdSetSourceSprite,ball
+	;invoke sBlt,0,10,100,100,0,0
+	;invoke sBltAlpha,-90,100,100,100,0,0,200
+	
+	invoke DrawSpline
+	
+		
+		
+	
+	
+	
+	
+	invoke sdEnd
+_ret:	ret
+TestDraw endp
+
+
+
+WinPric proc UseMost hWnd,msg,w,l
+	.if msg==WM_CLOSE
+		invoke PostQuitMessage,0
+	.elseif msg==WM_PAINT
+		invoke TestDraw,hWnd
+		invoke ValidateRect,hWnd,0
+	.elseif msg==WM_TIMER
+		invoke TestDraw,hWnd
+	.elseif msg==WM_KEYDOWN && w==VK_ESCAPE
+		invoke PostQuitMessage,0
+	.else
+		invoke DefWindowProc,hWnd,msg,w,l
+		ret
+	.endif
+	xor eax,eax
+	ret
+WinPric endp
+
+.data
+	ilkoz dd 255
+.code
+	
+main proc
+	local msg:MSG
+	local loop1,atom1
+	
+	invoke CoInitialize,0
+	
+	invoke InitSDraw,0,0
+	
+	
+	
+	
+	invoke sdSpriteFromBitmapFile,T("main.bmp")
+	mov spr1,eax
+	
+	invoke sdSpriteFromBitmapFile,T("back.bmp")
+	mov spr2,eax
+	
+	invoke sdSpriteFromBitmapFile,T("dude.bmp")
+	mov dude,eax
+	
+	invoke sdSpriteFromBitmapFile,T("txt1.bmp")
+	mov txt1,eax
+	
+	invoke sdSpriteFromJPGFile,T("jpg1.jpg")
+	mov jpg1,eax
+	
+	invoke sdSpriteFromILBFile,T("cable1.ilb")
+	mov imgCable,eax
+	
+	
+	
+	invoke sdSpriteFromILB,addr Ball_tga
+	mov ball,eax
+	
+	invoke sdSpritePreprocess_AlphaFromColor,dude,RGB(255,0,255)
+	invoke sdSpritePreprocess_AlphaFromColor,txt1,0
+	invoke sdSpritePreprocess_PremultiplyAlpha,dude
+	;invoke sdSpritePreprocess_PremultiplyAlpha,ball
+	invoke sdSpriteFromILBFile,T("round1.ilb")
+	mov round1,eax
+	invoke sdSpritePreprocess_PremultiplyAlpha,eax
+	
+	invoke sdLoadFont,addr WildWordsBold_fntdata
+	mov font1,eax
+	m2m SD_CurFont,font1
+	;print [eax].SFontStruct.isMono
+	
+	
+	invoke MakeOneWindow,400,300,WinPric,T("hello sDraw")
+	mov hwnd1,eax
+	
+	
+	
+	invoke SetTimer,hwnd1,1,20,0
+	MessageLoop
+	
+	invoke sdDeleteSprite,dude
+	
+	invoke CoUninitialize
+	
+	ret
+main endp
+
+
+start:
+	print "hello1"
+	invoke main
+	print "hello"
+	invoke ExitProcess,0
+
+end start

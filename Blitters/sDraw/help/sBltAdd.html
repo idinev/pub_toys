@@ -1,0 +1,54 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sBltAdd</h1>
+<p><span style="font-weight: bold;">sBltAdd</span> performs an additive-blending transfer. Color is saturated.</p>
+<BR>
+<p>void sBltAdd(long x,long y,long wid,long hei,long x2,long y2);</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>x,y,wid,hei,x2,y2</b></dt>
+  <dd>The usual parameters</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>sBltAdd(0,0,400,300,0,0);
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+sBltAdd disregards the alpha-channel of the source-sSprite. <BR>
+sBltAdd is 8-10 times faster than sBltAlpha, and the visual result is often even better! <BR>
+Additive blending is used in games as emulation of light (instead of having a dozen of similar textures with different light intensity). <BR>
+An example usage in GUI is: making your interface's buttons glow. 
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sBltParam.html">sBltAddParam</a>,
+<a href="sBltAddFade.html">sBltAddFade</a>,
+<a href="sBlt.html">sBlt</a>,
+<a href="sdSetSourceSprite.html">sdSetSourceSprite</a>
+</p>
+</body>
+</html>

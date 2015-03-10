@@ -1,0 +1,23 @@
+!sDraw
+15
+3
+sDraw GDI framework
+src\DATA
+src\TOOLS
+src\SURFACE
+src\SURFACE_PREPROCESS
+src\CLIPPER
+src\DRAWNORM
+src\DRAWTRANS
+src\DRAWALPHA
+src\DRAWADD
+src\DRAWTINT
+src\DRAWROP
+src\DrawText
+src\BLTxPARAM
+src\InitSDraw
+src\test
+---------------------
+src\CompatLayer.inc
+..\sDraw.inc
+\masm32\ultrano\bank\base.inc

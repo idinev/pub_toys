@@ -1,0 +1,129 @@
+
+
+
+sdSpritePreprocess_AlphaFromColor proc PRIVATE UseAll pSprite,dwColor
+	local dwSize
+	local iR,iG,iB,aA
+	
+	
+	
+	;-----[ compute iR,iG,iB ]-----[
+	mov eax,dwColor
+	movzx edx,al
+	mov iB,edx
+	movzx edx,ah
+	mov iG,edx
+	shr eax,16
+	movzx edx,al
+	mov iR,edx
+	;------------------------------/
+	
+	
+	
+	
+	mov ecx,pSprite
+	test ecx,ecx
+	jz _ret
+	mov eax,[ecx].sSprite.wid
+	imul eax,[ecx].sSprite.hei
+	mov dwSize,eax
+	mov edi,[ecx].sSprite.bits
+	or [ecx].sSprite.dwFlags,SDRAWSPRITE_HASALPHA
+	
+	align 16
+	nextpix:
+	mov eax,[edi]
+	mov ebx,eax
+	;--------[ process pixel ]----------------[
+	
+	;---[ fetch sR,sG,sB ]--[
+	movzx ecx,al
+	sub ecx,iB
+	jge @F
+		neg ecx
+	@@:	
+	movzx edx,ah
+	sub edx,iG
+	jge @F
+		neg edx
+	@@:
+	.if ecx<edx
+		mov ecx,edx
+	.endif
+	shr eax,16
+	movzx edx,al
+	sub edx,iR
+	jge @F
+		neg edx
+	@@:
+	.if ecx<edx
+		mov ecx,edx
+	.endif
+	; ecx = max alpha
+	;-----------------------/
+	
+		
+	
+	
+	
+	;------[ compose and put sR,sG,sB,aA ]-------[
+	and ebx,0FFFFFFh
+	shl ecx,24
+	or ebx,ecx
+	mov [edi],ebx
+	;-----------------------------------------/
+	add edi,4
+	dec dwSize
+	jnz nextpix
+	
+	
+_ret:	ret
+sdSpritePreprocess_AlphaFromColor endp
+
+sdSpritePreprocess_PremultiplyAlpha proc PRIVATE UseAll pSprite
+	local dwSize
+	
+	mov ecx,pSprite
+	test ecx,ecx
+	jz _ret
+	mov eax,[ecx].sSprite.wid
+	imul eax,[ecx].sSprite.hei
+	mov dwSize,eax
+	mov edi,[ecx].sSprite.bits
+	or [ecx].sSprite.dwFlags,SDRAWSPRITE_PREMULALPHA
+	
+	align 16
+	@@:
+	mov eax,[edi]
+	mov ecx,eax
+	mov ebx,eax
+	shr ecx,24
+	and eax,0FF00FFh
+	and ebx,000FF00h
+	imul eax,ecx
+	imul ebx,ecx
+	and eax,0FF00FF00h
+	and ebx,000FF0000h
+	shl ecx,24
+	or eax,ebx
+	shr eax,8
+	or eax,ecx
+	mov [edi],eax
+	add edi,4
+	dec dwSize
+	jnz @B
+	
+_ret:	ret
+sdSpritePreprocess_PremultiplyAlpha endp
+
+
+
+sdPreprocessSprite proc PUBLIC pSprite,dwOperationID,dwColor
+	.if dwOperationID==SDPREPR_ALPHA_FROM_COLOR
+		invoke sdSpritePreprocess_AlphaFromColor,pSprite,dwColor
+	.elseif dwOperationID==SDPREPR_PREMULTIPLY_ALPHA
+		invoke sdSpritePreprocess_PremultiplyAlpha,pSprite
+	.endif
+		
+	ret
+sdPreprocessSprite endp

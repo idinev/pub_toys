@@ -1,0 +1,7 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\Paint.Picture\shell\Pack16 sDraw]
+
+[HKEY_CLASSES_ROOT\Paint.Picture\shell\Pack16 sDraw\command]
+@="D:\\masm32\\ULTRANO\\sDraw\\Tools\\PackBitmap.exe %1"
+

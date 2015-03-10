@@ -1,0 +1,303 @@
+
+;=====[[ sBltAdd+Fade >>===\
+sBltAdd proc PUBLIC UseAll x,y,wid,hei,x2,y2
+	local extraDest,extraSrc
+	local Num16px,Num1px
+	invoke FixupSBLTparams,addr x
+	jz _ret
+	
+	COMPUTEBLTBITS2
+	
+	mov eax,wid
+	shr eax,4
+	mov Num16px,eax
+	mov eax,wid
+	and eax,15
+	mov Num1px,eax
+	
+	;----------[ draw a normal solid bitmap ]-------[
+	nextline:
+		mov ecx,Num16px
+		.if ecx
+			align 8
+			@@:
+			movq mm0,[edi]
+			movq mm1,[esi]
+			movq mm2,[edi+8]
+			movq mm3,[esi+8]
+			movq mm4,[edi+16]
+			movq mm5,[esi+16]
+			movq mm6,[edi+24]
+			movq mm7,[esi+24]
+			paddusb mm0,mm1
+			paddusb mm2,mm3
+			paddusb mm4,mm5
+			paddusb mm6,mm7
+			movq [edi],mm0
+			movq [edi+8],mm2
+			movq [edi+16],mm4
+			movq [edi+24],mm6
+			
+			add esi,32
+			add edi,32
+			
+			movq mm0,[edi]
+			movq mm1,[esi]
+			movq mm2,[edi+8]
+			movq mm3,[esi+8]
+			movq mm4,[edi+16]
+			movq mm5,[esi+16]
+			movq mm6,[edi+24]
+			movq mm7,[esi+24]
+			paddusb mm0,mm1
+			paddusb mm2,mm3
+			paddusb mm4,mm5
+			paddusb mm6,mm7
+			movq [edi],mm0
+			movq [edi+8],mm2
+			movq [edi+16],mm4
+			movq [edi+24],mm6
+			add esi,32
+			add edi,32
+			dec ecx
+			jnz @B
+		.endif
+		
+		
+		
+		mov ecx,Num1px
+		.if ecx
+			@@:
+			movd mm0,[esi]
+			movd mm1,[edi]
+			paddusb mm0,mm1
+			movd [edi],mm0
+			add esi,4
+			add edi,4
+			dec ecx
+			jnz @B
+		.endif
+		
+			
+		
+			
+	add esi,extraSrc
+	add edi,extraDest
+	dec hei
+	jnz nextline
+	;-----------------------------------------------/
+	emms	
+		
+	
+_ret:	ret
+sBltAdd endp
+
+
+sBltAddFade proc PUBLIC UseAll x,y,wid,hei,x2,y2,Fader
+	local extraDest,extraSrc
+	cmp Fader,0
+	jle _ret
+	.if Fader>255
+		invoke sBltAdd,x,y,wid,hei,x2,y2
+		jmp _ret
+	.endif
+	
+	
+	invoke FixupSBLTparams,addr x
+	jz _ret
+	
+	COMPUTEBLTBITS2
+	
+	
+	
+	;--[ set masks ]--[
+	mov eax,0FF00FFh
+	mov ecx,000FF00h
+	movd mm6,eax
+	movd mm7,ecx
+	mov eax,Fader
+	mov edx,eax
+	shl edx,16
+	or eax,edx
+	movd mm5,eax
+	;-----------------/
+	;----------[ draw a normal solid bitmap ]-------[
+	nextline:
+		mov ecx,wid
+		align 16
+		@@:
+			movd mm0,[esi]
+			movd mm1,[edi]
+			movq mm2,mm0
+			pand mm0,mm6
+			pand mm2,mm7
+			psrad mm2,8
+			pmullw mm0,mm5
+			pmullw mm2,mm5
+			psraw mm0,8
+			
+			pand mm0,mm6
+			pand mm2,mm7
+			paddusb mm1,mm0
+			paddusb mm1,mm2
+			movd [edi],mm1
+		add esi,4
+		add edi,4
+		dec ecx
+		jnz @B		
+			
+	add esi,extraSrc
+	add edi,extraDest
+	dec hei
+	jnz nextline
+	;-----------------------------------------------/
+	emms	
+		
+	
+_ret:	ret
+sBltAddFade endp
+
+;=======/
+
+sDrawRectAddFade proc PUBLIC UseAll x,y,wid,hei,dwColor,Alpha
+	
+	;----[ check params ]------------------------[
+	cmp Alpha,0
+	jle _ret
+	.if Alpha>256
+		mov Alpha,256
+	.endif
+	;--------------------------------------------/
+	
+	CHECKDRAWRECT
+	COMPUTEBLTBITS1
+	
+	
+	;---[ premultiply dwColor ]---[
+	mov eax,dwColor
+	mov ebx,eax
+	and eax,0FF00FFh
+	and ebx,000FF00h
+	imul eax,Alpha
+	imul ebx,Alpha
+	and eax,0FF00FF00h
+	and ebx,000FF0000h
+	or eax,ebx
+	shr eax,8
+	movd mm1,eax
+	;-----------------------------/
+	
+	
+	sub edi,4
+	
+	
+	
+	align 16
+	nextline:
+		mov ecx,wid
+		align 16
+		@@:
+			movd mm0,[edi+ecx*4]
+			paddusb mm0,mm1
+			movd [edi+ecx*4],mm0
+		dec ecx
+		jnz @B
+		
+		sub edi,sTarget_Data.linesize
+		dec hei
+	jnz nextline
+	
+	emms
+	
+_ret:	ret
+sDrawRectAddFade endp
+
+sDrawLineHAdd proc PUBLIC uses eax edx ecx edi x,y,wid,dwColor
+	mov ecx,x
+	mov edi,y
+	mov eax,wid
+	add ecx,SDDrawOffs.x
+	add edi,SDDrawOffs.y
+	add eax,ecx
+	cmp edi,SDBound.top
+	jl _ret	
+	cmp edi,SDBound.bottom
+	jge _ret
+	
+	cmp ecx,SDBound.left
+	jge @F
+		mov ecx,SDBound.left
+	@@:
+	cmp eax,SDBound.right
+	jle @F
+		mov eax,SDBound.right
+	@@:
+	sub eax,ecx
+	jle _ret
+	imul edi,sTarget_Data.linesize
+	shl ecx,2
+	add edi,sTarget_Data.bits
+	add edi,ecx
+	sub edi,4
+	mov ecx,dwColor
+	and ecx,0FEFEFEh
+	movd mm1,ecx
+	
+	align 16
+	@@:
+		movd mm0,[edi+eax*4]
+		paddusb mm0,mm1
+		movd [edi+eax*4],mm0
+	dec eax
+	jnz @B
+	
+	emms
+		
+_ret:	ret
+sDrawLineHAdd endp
+
+
+sDrawLineVAdd proc PUBLIC uses eax edx ecx edi x,y,hei,dwColor
+	mov ecx,x
+	mov edi,y
+	mov eax,hei
+	add ecx,SDDrawOffs.x
+	add edi,SDDrawOffs.y
+	add eax,edi
+	
+	cmp ecx,SDBound.left
+	jl _ret
+	cmp ecx,SDBound.right
+	jge _ret
+	
+	cmp edi,SDBound.top
+	jge @F
+		mov edi,SDBound.top
+	@@:
+	cmp eax,SDBound.bottom
+	jle @F
+		mov eax,SDBound.bottom
+	@@:
+	sub eax,edi
+	jle _ret
+	
+	imul edi,sTarget_Data.linesize
+	shl ecx,2
+	add edi,sTarget_Data.bits
+	add edi,ecx
+	mov ecx,dwColor
+	and ecx,0FEFEFEh
+	movd mm1,ecx
+	
+	align 16
+	@@:
+		movd mm0,[edi]
+		paddusb mm0,mm1
+		movd [edi],mm0
+		sub edi,sTarget_Data.linesize
+	dec eax
+	jnz @B
+	emms
+	
+_ret:	ret
+sDrawLineVAdd endp

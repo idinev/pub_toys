@@ -1,0 +1,88 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdLockRect</h1>
+<p><font color=red><i>Expert access only</i></font></p>
+<p><span style="font-weight: bold;">sdLockRect</span> obtains a direct pointer to the target-surface bits. Fills-in pLR with the actual locked rectangle (could be different than requested, after the internal clipping) </p>
+<BR>
+<p>bool sdLockRect(SDLOCKEDRECT* pLR,long x,long y,long wid,long hei);<BR><BR>
+typedef struct{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;	long x,y,wid,hei;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;	long*	lpBits;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;	long 	pitch; // in DWORDs !<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;	long deltaX,deltaY;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;	long deltaW,deltaH;<BR>
+}SDLOCKEDRECT;<BR>
+</p>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+  <dt> <b>pLR</b></dt>
+  <dd> <i>[out]</i> pointer to a SDLOCKEDRECT structure. The structure needn't be initialized.</dd>
+  <dt> <b>x,y,wid,hei</b></dt>
+  <dd> <i>[in]</i>rectangle to be "locked"</dd>
+</dl>
+<dl>
+</dl>
+
+<h4>SDLOCKEDRECT data</h4>
+<dl>
+  <dt> <b>x,y,wid,hei</b></dt>
+  <dd> the <i>actual</i> rectangle locked. It's always inside of the requested rectangle (usually would be equal to it)</dd>
+  <dt> <b>lpBits</b></dt>
+  <dd> pointer to the <B>top-left</b> pixel of the locked rectangle</dd>
+  <dt> <b>pitch</b></dt>
+  <dd> number of pixels per scanline of the target sSprite</dd>
+  <dt> <b>deltaX,deltaY,deltaW,deltaH</b></dt>
+  <dd> how many pixels were trimmed from each of the parameters "x,y,wid,hei" during clipping</dd>
+</dl>
+<dl>
+</dl>
+
+
+
+<h4>Return Value</h4>
+<p>
+<B>0</b> - failed, since the not even 1 pixel can be drawn in this rectangle (it's completely clipped off)<BR>
+<B>1</b> - success, the <i>complete</i> rectangle is drawable. deltaX=deltaY=deltaW=deltaH=0.<BR>
+<B>2</b> - success, but the rectangle was clipped a bit - your code must be aware of it (especially if you're doing a custom Blt !)
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>
+This code fills-in the locked rectangle with green:
+<pre>
+	LOCKEDRECT lr;
+	if(sdLockRect(&lr, 0,0, 100,100)){
+		while(lr.hei--){ // for each scanline
+			long i;// currentPixelIndex
+			for(i=0;i&lt;lr.wid;i++){ // for each pixel on this rectangle on this scanline
+				lr.lpBits[i] = 0x00FF00;
+			}
+			lr.lpBits -= lr.pitch; // NOTE! we actually subtract, instead of add. 
+		}
+	}
+</pre>
+</p>
+
+
+<h4>Remarks</h4>
+<p>
+Internally, sSprites's bitmap is in the GDI DIB format: bottom-up. sSprites are always 32bpp, each pixel is 0xAARRGGBB (alpha,red,green,blue). The destination alpha is always ignored in sDraw's drawing operations (sBlt***,sDrawRect***,sSet/GetPixel). 
+</p>
+
+
+<h4>See Also</h4>
+<p>
+<a href="sdSetTargetSprite.html">sdSetTargetSprite</a>
+</p>
+</body>
+</html>

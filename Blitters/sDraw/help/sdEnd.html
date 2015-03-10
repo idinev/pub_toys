@@ -1,0 +1,39 @@
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>sdEnd</h1>
+<p><span style="font-weight: bold;">sdEnd</span> updates the currently drawn window onto screen </p>
+<BR>
+<p>void sdEnd();</p>
+
+
+
+
+<h4>Return Value</h4>
+<p>None. [ASM: All registers are preserved.]
+</p>
+
+
+
+
+<h4>Example:</h4>
+<p>
+<pre>
+void DrawWindow(HWND hWnd){
+	if(!sdStart(hWnd))return; // must return
+	sDrawRect(0,0,2000,2000,0xFF0000); //fill with red
+	sdEnd();
+}
+</pre>
+</p>
+
+
+
+<h4>See Also</h4>
+<p>
+<a href="sdStart.html">sdStart</a>
+</p>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <link href="style.css" type="text/css" rel="StyleSheet">
+</head>
+<body>
+<h1>Introduction to sDraw</h1>
+Version 1.1: July 16, 2006. <br>
+Version 1.2: January 13, 2007.<br>
+<h4>What is sDraw?</h4>
+<p> A GDI replacement in some aspects, an upgrade in others, and a
+convenient library in all cases. All drawing/blending is done in
+software on one back-buffer DIB or on a custom surface (bitmap in
+memory). All drawing/blending is internally clipped (by one rectangle,
+any more would slow-down drawing). The final result is BitBlt-ed from
+the back-buffer DIB onto the window DC. </p>
+<h4>Features</h4>
+<p> &#8226; Loading and management of bitmaps is easy and straightforward. <br>
+&#8226; No need for brushes, pens, DCs, hBitmaps<br>
+&#8226; supports images with alpha-channel<br>
+&#8226; alpha-blending, additive-blending, custom blending, transparency-Blt<br>
+&#8226; 12 ROPs (raster operations) for drawing<br>
+&#8226; clipping - useful for complex GUI<br>
+&#8226; preprocessing of bitmaps: Color-to-Alpha, Premultiply-Alpha<br>
+&#8226; speed - completely written and optimized in x86 assembler<br>
+&#8226; interoperability with GDI, DirectDraw and Direct3D. <br>
+</p>
+<h4>Lacks:</h4>
+&#8226; On nVidia videocards, the final BitBlt fucks up and decreases
+performance (but not enough to throw sDraw into the Void of the Recycle
+Bin). Maybe the beta-testers had driver problems? ATi R9200, ATi R9250
+and GeForce2 work perfectly (meaning 0.5% cpu usage at 30-50 fps forced
+update-rate, instead of FX5900's 45% cpu load). <br>
+&#8226; not opensource.
+<br>
+sDraw can be <b>linked statically</b> (sDraw.lib) in C/C++/asm apps,
+or dynamically (sDraw.dll) in VisualBasic apps.
+<h4>Copyright:</h4>
+Ilian Dinev, <br>
+Ultrano Software <a href="http://www.ultranos.com" target="_blank">http://www.ultranos.com</a><br>
+<h4>License:</h4>
+Public domain. Meaning "completely free", no need for credits. Use and
+modify as you wish in commercial/free/opensource projects. An <a
+ href="mailto:ultrano@ultranos.com?subject=sDraw::feedback">email</a>
+with title "sDraw feedback" would be appreciated. I'd love to see my
+code useful, even if the coding itself was fun (~3000 lines for 1 day,
+but all this hateful documentation for two days ^^")
+<h4>Where to start?</h4>
+<p>
+<a href="InitSDraw.html">InitSDraw()</a>,
+</p>
+</body>
+</html>

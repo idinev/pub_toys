@@ -1,0 +1,205 @@
+sBltTint proc PUBLIC UseAll x,y,wid,hei,x2,y2,dwColor
+	local extraDest,extraSrc
+	local wid2
+	local TintRB,TintG
+	invoke FixupSBLTparams,addr x
+	jz _ret
+	
+	COMPUTEBLTBITS2
+	
+	
+	;
+	;			NOTE
+	;
+	;		uses only the alpha-channel of source-bitmap
+	
+	
+	mov eax,dwColor
+	mov edx,eax
+	and eax,0FF00FFh
+	and edx,000FF00h
+	mov TintRB,eax
+	mov TintG,edx
+	
+	
+	
+	@@:
+	m2m wid2,wid
+	align 16
+		_nextpix:
+		mov eax,[esi]
+		mov ecx,[edi]
+		
+		;-----[ get alpha ]-----[
+		shr eax,24
+		mov ebx,256
+		sub ebx,eax
+		; eax = Alpha
+		; ebx = invAlpha
+		;-----------------------/
+		
+		
+		mov edx,ecx
+		
+		and ecx,0FF00FFh
+		and edx,000FF00h
+		imul ecx,ebx
+		imul edx,ebx
+		mov ebx,eax
+		imul eax,TintRB
+		imul ebx,TintG
+		add eax,ecx
+		add ebx,edx
+		and eax,0FF00FF00h
+		and ebx,000FF0000h
+		add eax,ebx
+		shr eax,8
+		mov [edi],eax
+		
+		
+		
+		; out = (dcolor*(256-alpha) + color*alpha)/256 = 
+		;  dcolor*256 - dcolor*alpha + color*alpha = dcolor*256 + alpha*(color-dcolor)
+		
+		
+		
+		
+		add esi,4
+		add edi,4
+		dec wid2
+		jnz _nextpix
+		
+		add esi,extraSrc
+		add edi,extraDest
+		dec hei
+	jnz @B
+	
+		
+	
+	
+_ret:	ret
+sBltTint endp
+
+
+
+
+sBltTintDirect proc PUBLIC UseAll x,y,wid,hei,x2,y2,dwOriginalColor,dwColor
+	local extraDest,extraSrc
+	local wid2
+	local TintRB,TintG
+	local iR,iG,iB
+	invoke FixupSBLTparams,addr x
+	jz _ret
+	
+	COMPUTEBLTBITS2
+	
+	
+	;
+	;			NOTE
+	;
+	;	doesn't use the alpha-channel of the source-bitmap
+	
+	;--[ compute TintRB,TintG ]----[
+	mov eax,dwColor
+	mov edx,eax
+	and eax,0FF00FFh
+	and edx,000FF00h
+	mov TintRB,eax
+	mov TintG,edx
+	;------------------------------/
+	
+	;-----[ compute iR,iG,iB ]-----[
+	mov eax,dwOriginalColor
+	movzx edx,al
+	mov iB,edx
+	movzx edx,ah
+	mov iG,edx
+	shr eax,16
+	movzx edx,al
+	mov iR,edx
+	;------------------------------/
+	
+	
+	_nextline:
+	m2m wid2,wid
+	align 16
+		_nextpix:
+		mov eax,[esi]
+		
+		
+		;---[ fetch sR,sG,sB ]--[
+		movzx ecx,al
+		sub ecx,iB
+		jge @F
+			neg ecx
+		@@:	
+		movzx edx,ah
+		sub edx,iG
+		jge @F
+			neg edx
+		@@:
+		add ecx,edx
+		shr eax,16
+		movzx edx,al
+		sub edx,iR
+		jge @F
+			neg edx
+		@@:
+		add ecx,edx
+		.if ecx>256
+			mov ecx,256
+		.endif
+		
+		; ecx = max alpha
+		;-----------------------/
+		
+		
+		;-------------[ get alpha ]------------[
+		mov ebx,256
+		sub ebx,ecx
+		mov eax,ecx
+		; eax = Alpha
+		; ebx = invAlpha
+		;--------------------------------------/
+		
+		mov ecx,[edi]
+		mov edx,ecx
+		
+		and ecx,0FF00FFh
+		and edx,000FF00h
+		imul ecx,ebx
+		imul edx,ebx
+		mov ebx,eax
+		imul eax,TintRB
+		imul ebx,TintG
+		add eax,ecx
+		add ebx,edx
+		and eax,0FF00FF00h
+		and ebx,000FF0000h
+		add eax,ebx
+		shr eax,8
+		mov [edi],eax
+		
+		
+		
+		; out = (dcolor*(256-alpha) + color*alpha)/256 = 
+		;  dcolor*256 - dcolor*alpha + color*alpha = dcolor*256 + alpha*(color-dcolor)
+		
+		
+		
+		
+		add esi,4
+		add edi,4
+		dec wid2
+		jnz _nextpix
+		
+		add esi,extraSrc
+		add edi,extraDest
+		dec hei
+	jnz _nextline
+	
+		
+	
+	
+_ret:	ret
+sBltTintDirect endp
